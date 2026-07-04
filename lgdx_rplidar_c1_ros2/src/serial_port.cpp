@@ -79,3 +79,15 @@ boost::asio::awaitable<std::vector<uint8_t>> SerialPort::WriteRead(const std::ve
     RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
   }
 }
+
+boost::asio::awaitable<void> SerialPort::Stop()
+{
+  std::vector<uint8_t> command = {0xA5, 0x25};
+  co_await WriteRead(command);
+}
+
+boost::asio::awaitable<void> SerialPort::Reset()
+{
+  std::vector<uint8_t> command = {0xA5, 0x40};
+  co_await WriteRead(command);
+}

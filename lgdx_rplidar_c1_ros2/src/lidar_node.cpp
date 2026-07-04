@@ -33,6 +33,7 @@ boost::asio::awaitable<void> LidarNode::Main()
   bool self_check = co_await SelfCheck();
   if (self_check == false)
   {
+    co_await serial_port_->Reset();
     if (health_retry_count_ >= kMaxHealthRetry)
     {
       RCLCPP_FATAL(this->get_logger(), "The lidar is damaged, node will be terminated.");

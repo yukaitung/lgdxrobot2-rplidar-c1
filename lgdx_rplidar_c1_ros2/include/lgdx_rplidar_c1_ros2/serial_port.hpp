@@ -17,6 +17,9 @@ class SerialPort
     boost::asio::awaitable<void> Write(const std::vector<uint8_t> data);
     boost::asio::awaitable<std::vector<uint8_t>> WriteRead(const std::vector<uint8_t> data);
 
+    boost::asio::awaitable<void> Stop();
+    boost::asio::awaitable<void> Reset();
+
   private:
     unsigned int kWaitSecond = 5;
 

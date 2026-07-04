@@ -44,15 +44,6 @@ boost::asio::awaitable<LidarHealth> Config::GetHealth()
   co_return health;
 }
 
-boost::asio::awaitable<LidarSampleRate> Config::GetSampleRate()
-{
-  std::vector<uint8_t> command = {0xA5, 0x59};
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
-  LidarSampleRate sample_rate;
-  std::memcpy(&sample_rate, data.data(), sizeof(LidarSampleRate));
-  co_return sample_rate;
-}
-
 boost::asio::awaitable<uint16_t> Config::GetScanModeCount()
 {
   std::vector<uint8_t> command = {0xA5, 0x84, 0x04, 0x70, 0x00, 0x00, 0x00};

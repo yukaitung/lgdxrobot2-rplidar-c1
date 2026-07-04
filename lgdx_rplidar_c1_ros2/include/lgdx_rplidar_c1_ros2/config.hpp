@@ -10,7 +10,6 @@ class Config
     Config(std::shared_ptr<SerialPort> serial_port);
     boost::asio::awaitable<LidarInfo> GetInfo();
     boost::asio::awaitable<LidarHealth> GetHealth();
-    boost::asio::awaitable<LidarSampleRate> GetSampleRate();
     boost::asio::awaitable<uint16_t> GetScanModeCount();
     boost::asio::awaitable<uint32_t> GetScanModeUsPerSample(uint16_t index);
     boost::asio::awaitable<uint32_t> GetScanModeMaxDistance(uint16_t index);

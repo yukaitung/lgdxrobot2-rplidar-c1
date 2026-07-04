@@ -33,8 +33,8 @@ class SerialPort
 
     std::array<uint8_t, 512> read_buffer_ = {0};
 
-    std::string port_name_ = "/dev/ttyUSB0";
-    unsigned int port_baudrate_ = 460800;
+    std::string port_name_;
+    unsigned int port_baudrate_;
 
     void StopBlk();
 };

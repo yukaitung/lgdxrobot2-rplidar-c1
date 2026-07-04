@@ -20,6 +20,27 @@ void LidarNode::Initalise()
 
   RCLCPP_INFO(this->get_logger(), "Starting lgdx_rplidar_c1_ros2");
 
+  auto serial_port_param = rcl_interfaces::msg::ParameterDescriptor{};
+  serial_port_param.description = "Specifying usb port to connected lidar.";
+  this->declare_parameter("serial_port", "/dev/ttyUSB0", serial_port_param);
+  auto serial_baudrate_param = rcl_interfaces::msg::ParameterDescriptor{};
+  serial_baudrate_param.description = "Specifying usb port baudrate to connected lidar.";
+  this->declare_parameter("serial_baudrate", 460800, serial_baudrate_param);
+  auto frame_id_param = rcl_interfaces::msg::ParameterDescriptor{};
+  frame_id_param.description = "Specifying frame id of lidar.";
+  this->declare_parameter("frame_id", "laser_frame", frame_id_param);
+  auto inverted_param = rcl_interfaces::msg::ParameterDescriptor{};
+  inverted_param.description = "Specifying whether or not to invert scan data.";
+  this->declare_parameter("inverted", false, inverted_param);
+  auto angle_compensate_param = rcl_interfaces::msg::ParameterDescriptor{};
+  angle_compensate_param.description = "Specifying whether or not to enable angle_compensate of scan data.";
+  this->declare_parameter("angle_compensate", false, angle_compensate_param);
+  auto scan_mode_param = rcl_interfaces::msg::ParameterDescriptor{};
+  scan_mode_param.description = "Specifying scan mode of lidar.";
+  this->declare_parameter("scan_mode", "", scan_mode_param);
+
+  scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::QoS(rclcpp::KeepLast(10)));
+
   io_context_ = std::make_shared<boost::asio::io_context>();
   serial_port_ = std::make_shared<SerialPort>(shared_from_this(), io_context_);
   config_ = std::make_unique<Config>(serial_port_);

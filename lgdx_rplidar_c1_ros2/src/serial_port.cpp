@@ -5,6 +5,9 @@ SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio
   io_context_(io_context),
   serial_(*io_context)
 {
+  port_name_ = node->get_parameter("serial_port").as_string();
+  port_baudrate_ = node->get_parameter("serial_baudrate").as_int();
+
   reconnect_timer_ = node->create_wall_timer(std::chrono::seconds(kWaitSecond), [this]() {this->Connect();});
   reconnect_timer_->cancel();
 

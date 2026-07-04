@@ -1,6 +1,7 @@
 #ifndef LIDAR_NODE_HPP
 #define LIDAR_NODE_HPP
 
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "serial_port.hpp"
 #include "config.hpp"
@@ -23,6 +24,8 @@ class LidarNode : public rclcpp::Node
 
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr health_timer_;
+
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_pub_;
     
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<SerialPort> serial_port_;

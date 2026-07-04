@@ -23,6 +23,12 @@ include_directories(include)
 
 add_executable(${EXECUTABLE_NAME} 
   src/main.cpp
+  src/config.cpp
+  src/lidar_node.cpp
+  src/scan.cpp
+  src/serial_port.cpp
+  src/publisher.cpp
+
 )
 target_link_libraries(${EXECUTABLE_NAME}
   "${cpp_typesupport_target}"
@@ -34,7 +40,6 @@ target_link_libraries(${EXECUTABLE_NAME}
   sensor_msgs::sensor_msgs
   std_msgs::std_msgs
 )
-
 
 install(TARGETS
   ${EXECUTABLE_NAME} 

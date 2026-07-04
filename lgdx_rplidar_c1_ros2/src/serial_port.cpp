@@ -13,8 +13,10 @@ SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio
 
 SerialPort::~SerialPort()
 {
+  RCLCPP_INFO(logger_, "SerialPort::~SerialPort()");
   if (serial_.is_open())
   {
+    StopBlk();
     serial_.cancel();
     serial_.close();
   }
@@ -60,7 +62,10 @@ boost::asio::awaitable<void> SerialPort::Write(const std::vector<uint8_t> data)
   }
   catch(const std::exception& e)
   {
-    RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
+    if (rclcpp::ok())
+    {
+      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
+    }
   }
 }
 
@@ -70,13 +75,32 @@ boost::asio::awaitable<std::vector<uint8_t>> SerialPort::WriteRead(const std::ve
   {
     co_await serial_.async_write_some(boost::asio::buffer(data), boost::asio::use_awaitable);
     auto size = co_await serial_.async_read_some(boost::asio::buffer(read_buffer_), boost::asio::use_awaitable);
-    RCLCPP_INFO(logger_, "Read %ld bytes", size);
     std::vector<uint8_t> response(read_buffer_.begin(), read_buffer_.begin() + size);
     co_return response;
   }
   catch(const std::exception& e)
   {
-    RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
+    if (rclcpp::ok())
+    {
+      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
+    }
+  }
+}
+
+boost::asio::awaitable<std::vector<uint8_t>> SerialPort::Read()
+{
+  try
+  {
+    auto size = co_await serial_.async_read_some(boost::asio::buffer(read_buffer_), boost::asio::use_awaitable);
+    std::vector<uint8_t> response(read_buffer_.begin(), read_buffer_.begin() + size);
+    co_return response;
+  }
+  catch(const std::exception& e)
+  {
+    if (rclcpp::ok())
+    {
+      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
+    }
   }
 }
 
@@ -90,4 +114,17 @@ boost::asio::awaitable<void> SerialPort::Reset()
 {
   std::vector<uint8_t> command = {0xA5, 0x40};
   co_await WriteRead(command);
+}
+
+void SerialPort::StopBlk()
+{
+  std::vector<uint8_t> command = {0xA5, 0x25};
+
+  boost::system::error_code error;
+  serial_.write_some(boost::asio::buffer(command), error);
+  if(error) 
+  {
+    RCLCPP_ERROR(logger_, "Serial write throws an error: %s", error.message().c_str());
+    return;
+  }
 }

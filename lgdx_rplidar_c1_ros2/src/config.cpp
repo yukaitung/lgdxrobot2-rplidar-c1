@@ -7,16 +7,6 @@ Config::Config(std::shared_ptr<SerialPort> serial_port) :
   serial_port_(serial_port)
 {}
 
-void Config::GetData(std::vector<uint8_t> &data)
-{
-  std::string str;
-  for (auto d : data)
-  {
-    str += std::format("{:02X} ", d);
-  }
-  std::cout << str << std::endl;
-}
-
 uint8_t Config::GetCheckSum(const std::vector<uint8_t> &data)
 {
   uint8_t checksum = 0;

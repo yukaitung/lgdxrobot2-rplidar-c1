@@ -23,6 +23,7 @@ void LidarNode::Initalise()
   io_context_ = std::make_shared<boost::asio::io_context>();
   serial_port_ = std::make_shared<SerialPort>(shared_from_this(), io_context_);
   config_ = std::make_unique<Config>(serial_port_);
+  scan_ = std::make_unique<Scan>(serial_port_);
 
   serial_port_->StartSerialThread();
   boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
@@ -30,6 +31,7 @@ void LidarNode::Initalise()
 
 boost::asio::awaitable<void> LidarNode::Main()
 {
+  // Self Check
   bool self_check = co_await SelfCheck();
   if (self_check == false)
   {
@@ -43,6 +45,13 @@ boost::asio::awaitable<void> LidarNode::Main()
     health_retry_count_++;
     health_timer_->reset();
     co_return;
+  }
+
+  // Scan
+  co_await scan_->StartNormalScan();
+  while (rclcpp::ok())
+  {
+    auto scans = co_await scan_->NormalScan();
   }
 }
 

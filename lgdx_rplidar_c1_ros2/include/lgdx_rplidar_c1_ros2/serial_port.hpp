@@ -16,6 +16,7 @@ class SerialPort
 
     boost::asio::awaitable<void> Write(const std::vector<uint8_t> data);
     boost::asio::awaitable<std::vector<uint8_t>> WriteRead(const std::vector<uint8_t> data);
+    boost::asio::awaitable<std::vector<uint8_t>> Read();
 
     boost::asio::awaitable<void> Stop();
     boost::asio::awaitable<void> Reset();
@@ -34,6 +35,8 @@ class SerialPort
 
     std::string port_name_ = "/dev/ttyUSB0";
     unsigned int port_baudrate_ = 460800;
+
+    void StopBlk();
 };
 
 #endif // SERIAL_PORT_HPP

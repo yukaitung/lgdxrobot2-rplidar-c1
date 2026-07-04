@@ -35,4 +35,12 @@ typedef struct
   uint8_t answer_type;
 } LidarScanMode;
 
+typedef struct
+{
+  bool is_new_scan;
+  uint8_t quality;
+  float angle; // degree
+  float distance; // mm
+} LidarScanData;
+
 #endif // STRUCTS_HPP

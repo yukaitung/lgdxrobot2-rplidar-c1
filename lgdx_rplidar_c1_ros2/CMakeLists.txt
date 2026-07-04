@@ -28,6 +28,7 @@ add_executable(${EXECUTABLE_NAME}
   src/scan.cpp
   src/serial_port.cpp
   src/publisher.cpp
+  src/helper.cpp
 
 )
 target_link_libraries(${EXECUTABLE_NAME}

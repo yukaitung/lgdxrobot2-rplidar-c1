@@ -4,6 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "serial_port.hpp"
 #include "config.hpp"
+#include "scan.hpp"
 
 class LidarNode : public rclcpp::Node
 {
@@ -26,6 +27,7 @@ class LidarNode : public rclcpp::Node
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<SerialPort> serial_port_;
     std::unique_ptr<Config> config_;
+    std::unique_ptr<Scan> scan_;
 };
 
 #endif // LIDAR_NODE_HPP

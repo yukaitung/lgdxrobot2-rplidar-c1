@@ -27,4 +27,12 @@ typedef struct
   uint16_t time_express;
 } LidarSampleRate;
 
+typedef struct
+{
+  int mode;
+  float sample_rate; // KHz
+  uint32_t max_distance; // m
+  uint8_t answer_type;
+} LidarScanMode;
+
 #endif // STRUCTS_HPP

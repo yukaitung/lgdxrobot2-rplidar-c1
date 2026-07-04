@@ -21,6 +21,7 @@ class Config
   private:
     std::shared_ptr<SerialPort> serial_port_;
     uint8_t GetCheckSum(const std::vector<uint8_t> &data);
+    void GetData(std::vector<uint8_t> &data);
 };
 
 #endif // CONFIG_HPP

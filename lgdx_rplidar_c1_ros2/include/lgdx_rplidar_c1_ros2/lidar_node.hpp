@@ -10,7 +10,9 @@ class LidarNode : public rclcpp::Node
   public:
     LidarNode();
     void Initalise();
+    
     boost::asio::awaitable<void> Main();
+    boost::asio::awaitable<void> LidarInitalise();
 
   private:
     rclcpp::TimerBase::SharedPtr timer_;

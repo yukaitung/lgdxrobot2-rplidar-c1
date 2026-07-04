@@ -5,6 +5,13 @@
 LidarNode::LidarNode() : Node("rplidar_c1_node")
 {
   timer_ = this->create_wall_timer(std::chrono::microseconds(1), [this]() {this->Initalise();});
+  health_timer_ = this->create_wall_timer(std::chrono::milliseconds(kHealthRetryWaitMs), [this]() 
+  {
+    health_timer_->cancel();
+    serial_port_->StartSerialThread();
+    boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+  });
+  health_timer_->cancel();
 }
 
 void LidarNode::Initalise()
@@ -23,11 +30,25 @@ void LidarNode::Initalise()
 
 boost::asio::awaitable<void> LidarNode::Main()
 {
-  co_await LidarInitalise();
+  bool self_check = co_await SelfCheck();
+  if (self_check == false)
+  {
+    if (health_retry_count_ >= kMaxHealthRetry)
+    {
+      RCLCPP_FATAL(this->get_logger(), "The lidar is damaged, node will be terminated.");
+      rclcpp::shutdown();
+      co_return;
+    }
+    health_retry_count_++;
+    health_timer_->reset();
+    co_return;
+  }
 }
 
-boost::asio::awaitable<void> LidarNode::LidarInitalise()
+boost::asio::awaitable<bool> LidarNode::SelfCheck()
 {
+  RCLCPP_INFO(this->get_logger(), "Starting self check");
+
   // Get Hardware Info
   LidarInfo info = co_await config_->GetInfo();
   uint8_t major_model = info.model >> 4;
@@ -67,5 +88,18 @@ boost::asio::awaitable<void> LidarNode::LidarInitalise()
 
   // Get Health
   LidarHealth health = co_await config_->GetHealth();
-  RCLCPP_INFO(this->get_logger(), "Health status: %d, Error Code: %d", health.status, health.error_code);
+  switch(health.status)
+  {
+    case 0:
+      RCLCPP_INFO(this->get_logger(), "Health status: OK");
+      co_return true;
+      break;
+    case 1:
+      RCLCPP_WARN(this->get_logger(), "Health status: Warning, Error Code: %d", health.error_code);
+      co_return true;
+      break;
+    case 2:
+      RCLCPP_ERROR(this->get_logger(), "Health status: Error, Error Code: %d, will be restarted", health.error_code);
+      co_return false;
+  }
 }

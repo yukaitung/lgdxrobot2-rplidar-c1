@@ -10,13 +10,19 @@ class LidarNode : public rclcpp::Node
   public:
     LidarNode();
     void Initalise();
-    
+
     boost::asio::awaitable<void> Main();
-    boost::asio::awaitable<void> LidarInitalise();
+    boost::asio::awaitable<bool> SelfCheck();
 
   private:
-    rclcpp::TimerBase::SharedPtr timer_;
+    const int kMaxHealthRetry = 3;
+    const int kHealthRetryWaitMs = 500;
 
+    int health_retry_count_ = 0;
+
+    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr health_timer_;
+    
     std::shared_ptr<boost::asio::io_context> io_context_;
     std::shared_ptr<SerialPort> serial_port_;
     std::unique_ptr<Config> config_;

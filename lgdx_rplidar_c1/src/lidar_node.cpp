@@ -2,12 +2,12 @@
 #include <numbers> 
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
-#include "lgdx_rplidar_c1_ros2/helper.hpp"
-#include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
-#include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
-#include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
-#include "lgdx_rplidar_c1_ros2/scan/express_scan.hpp"
+#include "lgdx_rplidar_c1/lidar_node.hpp"
+#include "lgdx_rplidar_c1/helper.hpp"
+#include "lgdx_rplidar_c1/exceptions/get_config_exception.hpp"
+#include "lgdx_rplidar_c1/exceptions/serial_port_exception.hpp"
+#include "lgdx_rplidar_c1/scan/scan.hpp"
+#include "lgdx_rplidar_c1/scan/express_scan.hpp"
 
 namespace LgdxRobot2 
 {
@@ -42,7 +42,7 @@ void LidarNode::Initalise()
 {
   timer_->cancel();
 
-  RCLCPP_INFO(this->get_logger(), "Starting lgdx_rplidar_c1_ros2");
+  RCLCPP_INFO(this->get_logger(), "Starting lgdx_rplidar_c1");
 
   // Declare parameters
   auto serial_port_param = rcl_interfaces::msg::ParameterDescriptor{};

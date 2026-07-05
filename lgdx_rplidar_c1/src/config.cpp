@@ -1,8 +1,8 @@
 #include <bit>
 #include <cstring>
 
-#include "lgdx_rplidar_c1_ros2/config.hpp"
-#include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
+#include "lgdx_rplidar_c1/config.hpp"
+#include "lgdx_rplidar_c1/exceptions/get_config_exception.hpp"
 
 Config::Config(std::shared_ptr<SerialPort> serial_port) :
   serial_port_(serial_port)

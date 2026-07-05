@@ -1,4 +1,4 @@
-# lgdx_rplidar_c1_ros2
+# lgdx_rplidar_c1
 
 ## Overview
 
@@ -59,7 +59,7 @@ sudo service udev restart
 
 ```bash
 . install/setup.bash
-ros2 launch lgdx_rplidar_c1_ros2 view_sllidar_c1_launch.py
+ros2 launch lgdx_rplidar_c1 view_sllidar_c1_launch.py
 ```
 
 ### Delete UDEV rule (Optional)

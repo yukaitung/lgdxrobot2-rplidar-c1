@@ -1,5 +1,5 @@
-#include "lgdx_rplidar_c1_ros2/serial_port.hpp"
-#include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
+#include "lgdx_rplidar_c1/serial_port.hpp"
+#include "lgdx_rplidar_c1/exceptions/serial_port_exception.hpp"
 
 SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio::io_context> io_context) :
   logger_(node->get_logger()),

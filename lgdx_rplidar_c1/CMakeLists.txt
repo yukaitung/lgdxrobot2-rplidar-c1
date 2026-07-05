@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(lgdx_rplidar_c1_ros2)
+project(lgdx_rplidar_c1)
 
 set(EXECUTABLE_NAME rplidar_c1_component)
 set(EXPORT_EXECUTABLE_NAME export_rplidar_c1_component)

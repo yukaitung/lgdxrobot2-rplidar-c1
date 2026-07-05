@@ -17,7 +17,6 @@ find_package(Boost REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 
 include_directories(include)
 
@@ -39,7 +38,6 @@ target_link_libraries(${EXECUTABLE_NAME}
   rclcpp::rclcpp
   rclcpp_components::component
   sensor_msgs::sensor_msgs
-  std_msgs::std_msgs
 )
 
 install(DIRECTORY launch rviz

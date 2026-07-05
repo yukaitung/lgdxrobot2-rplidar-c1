@@ -119,10 +119,10 @@ release:
   script:
     - glab auth status
   release:
-    name : '$APP_VERSION'
-    tag_name: '$APP_VERSION'
-    description: '$APP_VERSION'
-    ref: '$CI_COMMIT_SHA'
+      name: 'Release $CI_COMMIT_TAG'
+      description: 'Created automatically by GitLab CI/CD'
+      tag_name: '$CI_COMMIT_TAG'
+      ref: '$CI_COMMIT_SHA'
 
 auto_merge:
   image: alpine:latest

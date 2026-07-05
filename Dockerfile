@@ -11,6 +11,7 @@ RUN apt-get update \
     # Install debian packages build dependencies
     python3-bloom python3-rosdep fakeroot debhelper dh-python \ 
     dpkg wget \
+    && rosdep install --from-paths lgdx_rplidar_c1_ros2 --ignore-src -y \
     && rm -rf /var/lib/apt/lists/* 
 
 # Complie the packages

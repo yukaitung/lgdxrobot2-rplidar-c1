@@ -7,10 +7,13 @@
 #include "config.hpp"
 #include "scan/scan_base.hpp"
 
+namespace LgdxRobot2
+{
+
 class LidarNode : public rclcpp::Node
 {
   public:
-    LidarNode();
+    LidarNode(const rclcpp::NodeOptions &options);
     void Initalise();
 
     void ConnectSerialPort();
@@ -49,5 +52,7 @@ class LidarNode : public rclcpp::Node
     std::unique_ptr<Config> config_;
     std::unique_ptr<ScanBase> scan_;
 };
+
+}
 
 #endif // LIDAR_NODE_HPP

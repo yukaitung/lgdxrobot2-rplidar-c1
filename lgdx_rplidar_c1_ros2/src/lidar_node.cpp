@@ -1,5 +1,6 @@
 #include <format>
 #include <numbers> 
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
 #include "lgdx_rplidar_c1_ros2/helper.hpp"
@@ -8,14 +9,17 @@
 #include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
 #include "lgdx_rplidar_c1_ros2/scan/express_scan.hpp"
 
-LidarNode::LidarNode() : Node("rplidar_c1_node")
+namespace LgdxRobot2 
+{
+
+LidarNode::LidarNode(const rclcpp::NodeOptions &options) : Node("rplidar_c1_node", options)
 {
   timer_ = this->create_wall_timer(std::chrono::microseconds(1), [this]() {this->Initalise();});
   health_timer_ = this->create_wall_timer(std::chrono::milliseconds(kHealthRetryWaitMs), [this]() 
   {
     health_timer_->cancel();
-    serial_port_->StartSerialThread();
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+    serial_port_->StartSerialThread();
   });
   health_timer_->cancel();
   retry_timer_ = this->create_wall_timer(std::chrono::seconds(kRetryWaitSecond), [this]() 
@@ -81,8 +85,8 @@ void LidarNode::ConnectSerialPort()
   try
   {
     serial_port_->Connect();
-    serial_port_->StartSerialThread();
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+    serial_port_->StartSerialThread();
   }
   catch(const SerialPortException& e)
   {
@@ -94,6 +98,7 @@ void LidarNode::ConnectSerialPort()
 
 boost::asio::awaitable<void> LidarNode::Main()
 {
+  RCLCPP_INFO(this->get_logger(), "Starting main");
   try
   {
     // Self Check
@@ -373,3 +378,7 @@ void LidarNode::PublishScan(const std::vector<LidarScanData> &scans,
   }
   scan_pub_->publish(scan_msg);
 }
+
+}
+
+RCLCPP_COMPONENTS_REGISTER_NODE(LgdxRobot2::LidarNode)

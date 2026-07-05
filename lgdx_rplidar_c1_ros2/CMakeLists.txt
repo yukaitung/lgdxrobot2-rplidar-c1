@@ -41,6 +41,10 @@ target_link_libraries(${EXECUTABLE_NAME}
   std_msgs::std_msgs
 )
 
+install(DIRECTORY launch rviz
+  DESTINATION share/${PROJECT_NAME}
+)
+
 install(TARGETS
   ${EXECUTABLE_NAME} 
   DESTINATION lib/${PROJECT_NAME}

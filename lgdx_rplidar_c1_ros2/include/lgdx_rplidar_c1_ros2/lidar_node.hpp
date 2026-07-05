@@ -15,12 +15,24 @@ class LidarNode : public rclcpp::Node
 
     boost::asio::awaitable<void> Main();
     boost::asio::awaitable<bool> SelfCheck();
+    void PublishScan(const std::vector<LidarScanData> &scans, 
+      size_t valid_scan_start, size_t valid_scans_count,
+      const float angle_max, const float angle_min,
+      const rclcpp::Time &start_time, const float scan_time);
 
   private:
     const int kMaxHealthRetry = 3;
     const int kHealthRetryWaitMs = 500;
+    const float kScanMinDistance = 0.05f;
 
     int health_retry_count_ = 0;
+    std::string frame_id_;
+    bool inverted_;
+
+    LidarScanMode current_scan_mode_;
+    float scan_frequency_ = 10.0f; // default frequent is 10 hz (by motor pwm value)
+    bool angle_compensate_ = false;
+    size_t angle_compensate_multiple = 1; // It stand of angle compensate at per 1 degree
 
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr health_timer_;

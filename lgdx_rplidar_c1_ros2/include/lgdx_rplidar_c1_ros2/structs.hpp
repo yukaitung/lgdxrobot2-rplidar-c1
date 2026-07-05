@@ -30,6 +30,7 @@ typedef struct
 typedef struct
 {
   int mode;
+  uint32_t us_per_sample; // us
   float sample_rate; // KHz
   uint32_t max_distance; // m
   uint8_t answer_type;

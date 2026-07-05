@@ -1,6 +1,8 @@
-#include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
-
 #include <format>
+#include <numbers> 
+
+#include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
+#include "lgdx_rplidar_c1_ros2/helper.hpp"
 
 LidarNode::LidarNode() : Node("rplidar_c1_node")
 {
@@ -20,6 +22,7 @@ void LidarNode::Initalise()
 
   RCLCPP_INFO(this->get_logger(), "Starting lgdx_rplidar_c1_ros2");
 
+  // Declare parameters
   auto serial_port_param = rcl_interfaces::msg::ParameterDescriptor{};
   serial_port_param.description = "Specifying usb port to connected lidar.";
   this->declare_parameter("serial_port", "/dev/ttyUSB0", serial_port_param);
@@ -39,6 +42,12 @@ void LidarNode::Initalise()
   scan_mode_param.description = "Specifying scan mode of lidar.";
   this->declare_parameter("scan_mode", "", scan_mode_param);
 
+  // Set parameters
+  angle_compensate_ = this->get_parameter("angle_compensate").as_bool();
+  frame_id_ = this->get_parameter("frame_id").as_string();
+  inverted_ = this->get_parameter("inverted").as_bool();
+
+  // Publisher
   scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::QoS(rclcpp::KeepLast(10)));
 
   io_context_ = std::make_shared<boost::asio::io_context>();
@@ -68,11 +77,80 @@ boost::asio::awaitable<void> LidarNode::Main()
     co_return;
   }
 
+  // Set calculation
+  int points_per_revolution = int(1000 * 1000 / current_scan_mode_.us_per_sample / scan_frequency_);
+  angle_compensate_multiple = points_per_revolution / 360.0  + 1;
+  if (angle_compensate_multiple < 1)
+  {
+    angle_compensate_multiple = 1.0;
+  }
+  
   // Scan
   co_await scan_->StartNormalScan();
+
+  std::vector<LidarScanData> scans;
+  scans.reserve(1024);
+  rclcpp::Time start_time = this->now();
   while (rclcpp::ok())
   {
-    auto scans = co_await scan_->NormalScan();
+    auto [has_new_scan, some_scans] = co_await scan_->NormalScan();
+    if (has_new_scan && scans.size() > 0)
+    {
+      rclcpp::Time end_time = this->now();
+      float scan_time = (end_time - start_time).seconds();
+      
+      if (angle_compensate_)
+      {
+        const int angle_compensate_count = 360 * angle_compensate_multiple;
+        int angle_compensate_offset = 0;
+        std::vector<LidarScanData> angle_compensate_scans;
+        angle_compensate_scans.reserve(scans.size());
+        for (size_t i = 0, j = 0; i < scans.size(); i++)
+        {
+          if (scans[i].distance != 0.0f)
+          {
+            int angle_value = int(scans[i].angle * angle_compensate_multiple);
+            if ((angle_value - angle_compensate_offset) < 0)
+            {
+              angle_compensate_offset = angle_compensate_count;
+            }
+            while (j < angle_compensate_multiple)
+            {
+              int angle_compensate_index = angle_value - angle_compensate_offset + j;
+              if (angle_compensate_index >= angle_compensate_count)
+              {
+                angle_compensate_index = angle_compensate_count - 1;
+              }
+              angle_compensate_scans[angle_compensate_index] = scans[i];
+            }
+          }
+        }
+
+        float angle_max = Helper::DegToRad(360.0f);
+        float angle_min = 0.0f;
+
+        PublishScan(angle_compensate_scans, 0, angle_compensate_count, angle_max, angle_min, start_time, scan_time);
+      }
+      else
+      {
+        int start = 0, end = 0, i = 0;
+        // Find the first valid node and last valid node
+        while (scans[i++].distance == 0.0f && (long unsigned int)(i) < scans.size() - 1);
+        start = i - 1;
+        i = scans.size() - 1;
+        while (scans[i--].distance != 0.0f && i > 0);
+        end = i + 1;
+
+        float angle_max = scans[end].angle;
+        float angle_min = scans[start].angle;
+
+        PublishScan(scans, start, end - start + 1, angle_max, angle_min, start_time, scan_time);
+      }
+
+      scans.clear();
+      start_time = this->now();
+    }
+    scans.insert(scans.end(), some_scans.begin(), some_scans.end());
   }
 }
 
@@ -105,6 +183,7 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
     std::string name = co_await config_->GetScanModeName(i);
     LidarScanMode scan_mode{
       .mode = i + 1,
+      .us_per_sample = us_per_sample,
       .sample_rate =  1.0f / (float)us_per_sample * 1000.0f,
       .max_distance = max_distance,
       .answer_type = ans_type
@@ -113,6 +192,11 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
   }
   for(auto [key, scan_mode] : scan_modes)
   {
+    // TODO: Change mode
+    if (scan_mode.mode == 1)
+    {
+      current_scan_mode_ = scan_mode;
+    }
     RCLCPP_INFO(this->get_logger(), "Index: %d, Scan Mode: %s, Sample Rate: %.0f kHz, Max Distance: %d m, Answer Type: 0x%x",
       scan_mode.mode, key.c_str(), scan_mode.sample_rate, scan_mode.max_distance, scan_mode.answer_type);
   }
@@ -133,4 +217,52 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
       RCLCPP_ERROR(this->get_logger(), "Health status: Error, Error Code: %d, will be restarted", health.error_code);
       co_return false;
   }
+}
+
+void LidarNode::PublishScan(const std::vector<LidarScanData> &scans, 
+  size_t valid_scan_start, size_t valid_scans_count,
+  const float angle_max, const float angle_min,
+  const rclcpp::Time &start_time, const float scan_time)
+{
+  sensor_msgs::msg::LaserScan scan_msg;
+  scan_msg.header.stamp = start_time;
+  scan_msg.header.frame_id = frame_id_;
+
+  bool reversed = (angle_max > angle_min);
+  if (reversed)
+  {
+    scan_msg.angle_min = std::numbers::pi - angle_max;
+    scan_msg.angle_max = std::numbers::pi - angle_min;
+  }
+  else
+  {
+    scan_msg.angle_min = std::numbers::pi - angle_min;
+    scan_msg.angle_max = std::numbers::pi - angle_max;
+  }
+  scan_msg.angle_increment = (scan_msg.angle_max - scan_msg.angle_min) / float(valid_scans_count - 1);
+  scan_msg.scan_time = scan_time;
+  scan_msg.range_min = kScanMinDistance;
+  scan_msg.range_max = current_scan_mode_.max_distance;
+
+  scan_msg.intensities.reserve(valid_scans_count);
+  scan_msg.ranges.reserve(valid_scans_count);
+  for (size_t i = valid_scan_start; i < valid_scans_count; i++)
+  {
+    if (scans[i].distance == 0.0f)
+    {
+      scan_msg.ranges.push_back(std::numeric_limits<float>::infinity());
+    }
+    else
+    {
+      scan_msg.ranges.push_back(scans[i].distance);
+    }
+    scan_msg.intensities.push_back(scans[i].quality >> 2);
+  }
+  bool reverse_data = (!inverted_ && reversed) || (inverted_ && !reversed);
+  if (reverse_data)
+  {
+    std::reverse(scan_msg.ranges.begin(), scan_msg.ranges.end());
+    std::reverse(scan_msg.intensities.begin(), scan_msg.intensities.end());
+  }
+  scan_pub_->publish(scan_msg);
 }

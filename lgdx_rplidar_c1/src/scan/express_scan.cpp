@@ -1,5 +1,5 @@
-#include "lgdx_rplidar_c1_ros2/scan/express_scan.hpp"
-#include "lgdx_rplidar_c1_ros2/helper.hpp"
+#include "lgdx_rplidar_c1/scan/express_scan.hpp"
+#include "lgdx_rplidar_c1/helper.hpp"
 
 ExpressScan::ExpressScan(std::shared_ptr<SerialPort> serial_port, uint8_t mode) :
   mode_(mode),

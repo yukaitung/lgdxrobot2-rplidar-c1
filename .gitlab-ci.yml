@@ -17,7 +17,7 @@ prepare:
   image: alpine:latest
   script:
     - apk add libxml2-utils
-    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdx_rplidar_c1_ros2/package.xml)" >> variables.env
+    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdx_rplidar_c1/package.xml)" >> variables.env
   artifacts:
     reports:
       dotenv: variables.env
@@ -45,10 +45,10 @@ build-amd64:
   script:
     - docker build -f Dockerfile -o . .
     - cd debs
-    - zip -r lgdx_rplidar_c1_ros2-$ARCH.zip *
+    - zip -r lgdx_rplidar_c1-$ARCH.zip *
   artifacts:
     paths:
-      - debs/lgdx_rplidar_c1_ros2-$ARCH.zip
+      - debs/lgdx_rplidar_c1-$ARCH.zip
     expire_in: 1 day
 
 build-arm64:
@@ -71,10 +71,10 @@ build-arm64:
   script:
     - docker build -f Dockerfile -o . .
     - cd debs
-    - zip -r lgdx_rplidar_c1_ros2-$ARCH.zip *
+    - zip -r lgdx_rplidar_c1-$ARCH.zip *
   artifacts:
     paths:
-      - debs/lgdx_rplidar_c1_ros2-$ARCH.zip
+      - debs/lgdx_rplidar_c1-$ARCH.zip
     expire_in: 1 day
 
 #
@@ -99,12 +99,12 @@ upload:
     - cd debs
     - |
       curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-           --upload-file lgdx_rplidar_c1_ros2-amd64.zip \
-           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lgdx_rplidar_c1_ros2/$CI_COMMIT_BRANCH/lgdx_rplidar_c1_ros2-amd64.zip"
+           --upload-file lgdx_rplidar_c1-amd64.zip \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lgdx_rplidar_c1/$CI_COMMIT_BRANCH/lgdx_rplidar_c1-amd64.zip"
     - |
       curl --location --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
-           --upload-file lgdx_rplidar_c1_ros2-arm64.zip \
-           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lgdx_rplidar_c1_ros2/$CI_COMMIT_BRANCH/lgdx_rplidar_c1_ros2-arm64.zip"
+           --upload-file lgdx_rplidar_c1-arm64.zip \
+           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lgdx_rplidar_c1/$CI_COMMIT_BRANCH/lgdx_rplidar_c1-arm64.zip"
 
 release:
   stage: release

@@ -1,4 +1,4 @@
-# lgdx_rplidar_c1_ros2
+# lgdx_rplidar_c1
 
 ## Overview
 
@@ -26,7 +26,7 @@ While this package may work with other RPLIDAR models by changing the baud rate,
 > Note: This package is only available on packages.lgdxrobot.uk
 
 ```bash
-sudo apt install ros-lyrical-lgdx-rplidar-c1-ros2
+sudo apt install ros-lyrical-lgdx-rplidar-c1
 ```
 
 ### 1.2. Build from source
@@ -59,7 +59,7 @@ sudo service udev restart
 
 ```bash
 . install/setup.bash
-ros2 launch lgdx_rplidar_c1_ros2 view_sllidar_c1_launch.py
+ros2 launch lgdx_rplidar_c1 view_sllidar_c1_launch.py
 ```
 
 ### Delete UDEV rule (Optional)

@@ -5,6 +5,7 @@
 #include "lgdx_rplidar_c1_ros2/helper.hpp"
 #include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
 #include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
+#include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
 
 LidarNode::LidarNode() : Node("rplidar_c1_node")
 {
@@ -119,7 +120,7 @@ boost::asio::awaitable<void> LidarNode::Main()
     }
     
     // Scan
-    co_await scan_->StartNormalScan();
+    co_await scan_->Start();
 
     std::vector<LidarScanData> scans;
     scans.reserve(1024);
@@ -127,7 +128,7 @@ boost::asio::awaitable<void> LidarNode::Main()
     float last_angle = -1.0f;
     while (rclcpp::ok())
     {
-      auto some_scans = co_await scan_->NormalScan();
+      auto some_scans = co_await scan_->GetData();
 
       // Check if new scan data is available
       bool has_new_scan = false;

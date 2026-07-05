@@ -1,4 +1,4 @@
-#include "lgdx_rplidar_c1_ros2/scan.hpp"
+#include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
 #include "lgdx_rplidar_c1_ros2/helper.hpp"
 
 Scan::Scan(std::shared_ptr<SerialPort> serial_port) :
@@ -6,7 +6,7 @@ Scan::Scan(std::shared_ptr<SerialPort> serial_port) :
   buffer_(kBufferSize)
 {}
 
-boost::asio::awaitable<void> Scan::StartNormalScan()
+boost::asio::awaitable<void> Scan::Start()
 {
   // Send the command
   std::vector<uint8_t> command = {0xA5, 0x20};
@@ -20,7 +20,7 @@ boost::asio::awaitable<void> Scan::StartNormalScan()
   buffer_.erase(buffer_.begin(), buffer_.begin() + kDescriptorSize);
 }
 
-boost::asio::awaitable<std::vector<LidarScanData>> Scan::NormalScan()
+boost::asio::awaitable<std::vector<LidarScanData>> Scan::GetData()
 {
   auto data = co_await serial_port_->Read();
   buffer_.insert(buffer_.end(), data.begin(), data.end());

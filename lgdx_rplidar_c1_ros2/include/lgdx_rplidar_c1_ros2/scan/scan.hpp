@@ -3,16 +3,17 @@
 
 #include <boost/circular_buffer.hpp>
 
-#include "serial_port.hpp"
-#include "structs.hpp"
+#include "scan_base.hpp"
+#include "../serial_port.hpp"
+#include "../structs.hpp"
 
-class Scan
+class Scan : public ScanBase
 {
   public:
     Scan(std::shared_ptr<SerialPort> serial_port);
     
-    boost::asio::awaitable<void> StartNormalScan();
-    boost::asio::awaitable<std::vector<LidarScanData>> NormalScan();
+    boost::asio::awaitable<void> Start() override;
+    boost::asio::awaitable<std::vector<LidarScanData>> GetData() override;
 
   private:
     const size_t kBufferSize = 1024;

@@ -26,7 +26,7 @@ add_executable(${EXECUTABLE_NAME}
   src/config.cpp
   src/helper.cpp
   src/lidar_node.cpp
-  src/scan.cpp
+  src/scan/scan.cpp
   src/serial_port.cpp
 
 )

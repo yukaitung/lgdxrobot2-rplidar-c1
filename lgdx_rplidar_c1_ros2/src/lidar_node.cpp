@@ -153,12 +153,6 @@ boost::asio::awaitable<void> LidarNode::Main()
           scans.insert(scans.end(), some_scans.begin(), some_scans.begin() + new_scan_index - 1);
         }
 
-        RCLCPP_INFO(this->get_logger(), "scans.size(): %ld", scans.size());
-        for (size_t i = 0; i < scans.size(); i++)
-        {
-          RCLCPP_INFO(this->get_logger(), "%ld, %f, %f", i, scans[i].angle, scans[i].distance);
-        }
-
         rclcpp::Time end_time = this->now();
         float scan_time = (end_time - start_time).seconds();
         

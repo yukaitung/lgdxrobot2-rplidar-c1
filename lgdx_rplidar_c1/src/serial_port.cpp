@@ -12,11 +12,6 @@ SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio
 
 SerialPort::~SerialPort()
 {
-  if (serial_.is_open())
-  {
-    serial_.cancel();
-    serial_.close();
-  }
   if(serial_thread_.joinable())
   {
     serial_thread_.join();
@@ -106,7 +101,7 @@ boost::asio::awaitable<void> SerialPort::Reset()
   co_await WriteRead(command);
 }
 
-void SerialPort::StopBlk()
+void SerialPort::Shutdown()
 {
   std::vector<uint8_t> command = {0xA5, 0x25};
   boost::system::error_code error;

@@ -9,7 +9,7 @@
 [![Latest Release](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/badges/release.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/releases) 
 
 
-A modern ROS 2 Lyrical (or later) wrapper for the RPLIDAR C1, specifically designed for LGDXRobot2. This package is developed from scratch using C++20 and Boost. It supports composable nodes and is able to reconnect to the RPLIDAR if the connection is lost.
+A modern ROS 2 Lyrical (or later) wrapper for the RPLIDAR C1, specifically designed for [LGDXRobot2](https://lgdxrobot.uk/lgdxrobot2/). This package is developed from scratch using C++20 and Boost. It supports composable nodes and is able to reconnect to the RPLIDAR if the connection is lost.
 
 ## Limitations
 
@@ -21,7 +21,7 @@ While this package may work with other RPLIDAR models by changing the baud rate,
 
 ## Installation
 
-### APT
+### 1.1. APT
 
 > Note: This package is only available on packages.lgdxrobot.uk
 
@@ -29,7 +29,7 @@ While this package may work with other RPLIDAR models by changing the baud rate,
 sudo apt install ros-lyrical-lgdx-rplidar-c1-ros2
 ```
 
-### Build from source
+### 1.2. Build from source
 
 This package has been tested on Ubuntu 26.04, but it should work on other operating systems, as no system-specific calls are used.
 
@@ -46,18 +46,30 @@ rosdep install --from-paths src --ignore-src -y
 colcon build --symlink-install
 ```
 
-## Usage
-
-### Add UDEV rule
+### 2. Add UDEV rule
 
 ```bash
-
+curl -L -o rplidar.rules https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/raw/main/udev/rplidar.rules
+sudo cp rplidar.rules  /etc/udev/rules.d
+sudo service udev reload
+sudo service udev restart
 ```
 
-### Launch
+### 3. Launch
 
 ```bash
-ros2 launch lgdx_rplidar_c1_ros2 rplidar_c1_launch.py
+. install/setup.bash
+ros2 launch lgdx_rplidar_c1_ros2 view_sllidar_c1_launch.py
+```
+
+### Delete UDEV rule (Optional)
+
+If you want to delete the UDEV rule, you can do so by running the following command:
+
+```bash
+sudo rm /etc/udev/rules.d/rplidar.rules
+sudo service udev reload
+sudo service udev restart
 ```
 
 ## Parameters

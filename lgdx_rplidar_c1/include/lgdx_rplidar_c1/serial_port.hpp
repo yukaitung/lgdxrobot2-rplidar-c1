@@ -21,7 +21,7 @@ class SerialPort
     boost::asio::awaitable<void> Stop();
     boost::asio::awaitable<void> Reset();
 
-    void StopBlk();
+    void Shutdown();
 
   private:
     unsigned int kWaitSecond = 5;

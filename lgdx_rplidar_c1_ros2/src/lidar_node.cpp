@@ -79,7 +79,7 @@ boost::asio::awaitable<void> LidarNode::Main()
 
   // Set calculation
   int points_per_revolution = int(1000 * 1000 / current_scan_mode_.us_per_sample / scan_frequency_);
-  angle_compensate_multiple = points_per_revolution / 360.0  + 1;
+  angle_compensate_multiple = points_per_revolution / 360.0 + 1;
   if (angle_compensate_multiple < 1)
   {
     angle_compensate_multiple = 1.0;
@@ -125,25 +125,28 @@ boost::asio::awaitable<void> LidarNode::Main()
       {
         const int angle_compensate_count = 360 * angle_compensate_multiple;
         int angle_compensate_offset = 0;
-        std::vector<LidarScanData> angle_compensate_scans;
-        angle_compensate_scans.reserve(scans.size());
-        for (size_t i = 0, j = 0; i < scans.size(); i++)
+        std::vector<LidarScanData> angle_compensate_scans(angle_compensate_count, LidarScanData{});
+        for (size_t i = 0; i < scans.size(); i++)
         {
           if (scans[i].distance != 0.0f)
           {
             int angle_value = int(scans[i].angle * angle_compensate_multiple);
             if ((angle_value - angle_compensate_offset) < 0)
             {
-              angle_compensate_offset = angle_compensate_count;
+              angle_compensate_offset = angle_value;
             }
-            while (j < angle_compensate_multiple)
+            for (size_t j = 0; j < angle_compensate_multiple; j++)
             {
               int angle_compensate_index = angle_value - angle_compensate_offset + j;
               if (angle_compensate_index >= angle_compensate_count)
               {
                 angle_compensate_index = angle_compensate_count - 1;
               }
-              angle_compensate_scans[angle_compensate_index] = scans[i];
+              
+              if (angle_compensate_index >= 0 && size_t(angle_compensate_index) < angle_compensate_count) // Must > 0
+              {
+                angle_compensate_scans[angle_compensate_index] = scans[i];
+              }
             }
           }
         }
@@ -151,7 +154,7 @@ boost::asio::awaitable<void> LidarNode::Main()
         float angle_max = Helper::DegToRad(360.0f);
         float angle_min = 0.0f;
 
-        PublishScan(angle_compensate_scans, 0, angle_compensate_count, angle_max, angle_min, start_time, scan_time);
+        PublishScan(angle_compensate_scans, 0, angle_compensate_scans.size(), angle_max, angle_min, start_time, scan_time);
       }
       else
       {
@@ -163,8 +166,8 @@ boost::asio::awaitable<void> LidarNode::Main()
         while (scans[i--].distance != 0.0f && i > 0);
         end = i + 1;
 
-        float angle_max = scans[end].angle;
-        float angle_min = scans[start].angle;
+        float angle_max = Helper::DegToRad(scans[end].angle);
+        float angle_min = Helper::DegToRad(scans[start].angle);
 
         PublishScan(scans, start, end - start + 1, angle_max, angle_min, start_time, scan_time);
       }

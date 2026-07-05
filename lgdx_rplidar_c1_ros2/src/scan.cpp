@@ -32,7 +32,7 @@ boost::asio::awaitable<std::vector<LidarScanData>> Scan::NormalScan()
     std::vector<uint8_t> scan_data(buffer_.begin(), buffer_.begin() + kScanDataSize);
     LidarScanData scan{
       .quality = uint8_t(scan_data[0] >> 2),
-      .angle = Helper::DegToRad(uint16_t(scan_data[2] << 7 | scan_data[1] >> 1) / 64.0f),
+      .angle = uint16_t(scan_data[2] << 7 | scan_data[1] >> 1) / 64.0f,
       .distance = (uint16_t(scan_data[4] << 8 | scan_data[3]) / 4.0f / 1000.0f)
     };
     scans.push_back(scan);

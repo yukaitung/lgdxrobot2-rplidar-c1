@@ -38,7 +38,6 @@ typedef struct
 
 typedef struct
 {
-  bool is_new_scan;
   uint8_t quality;
   float angle; // degree
   float distance; // mm

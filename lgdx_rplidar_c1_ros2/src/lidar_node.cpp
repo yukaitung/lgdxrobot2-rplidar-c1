@@ -91,11 +91,26 @@ boost::asio::awaitable<void> LidarNode::Main()
   std::vector<LidarScanData> scans;
   scans.reserve(1024);
   rclcpp::Time start_time = this->now();
+  float last_angle = -1.0f;
   while (rclcpp::ok())
   {
-    auto [new_scan_index, some_scans] = co_await scan_->NormalScan();
+    auto some_scans = co_await scan_->NormalScan();
 
-    if (new_scan_index >= 0 && scans.size() > 0)
+    // Check if new scan data is available
+    bool has_new_scan = false;
+    size_t new_scan_index = 0;
+    for (size_t i = 0; i < some_scans.size(); i++)
+    {
+      if (some_scans[i].angle < last_angle)
+      {
+        has_new_scan = true;
+        new_scan_index = i;
+      }
+      last_angle = some_scans[i].angle;
+    }
+
+    // Process the scan data for one revolution
+    if (has_new_scan && scans.size() > 0)
     {
       if (new_scan_index > 0)
       {
@@ -160,6 +175,7 @@ boost::asio::awaitable<void> LidarNode::Main()
     }
     else
     {
+      // Not full revolution, append the scan data
       scans.insert(scans.end(), some_scans.begin(), some_scans.end());
     }
   }

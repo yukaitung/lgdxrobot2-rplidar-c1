@@ -119,8 +119,8 @@ release:
   script:
     - glab auth status
   release:                               
-    tag_name: '$CI_COMMIT_TAG'
-    description: '$CI_COMMIT_TAG'
+    tag_name: 'v0.$CI_PIPELINE_IID'
+    description: 'v0.$CI_PIPELINE_IID'
 
 auto_merge:
   image: alpine:latest

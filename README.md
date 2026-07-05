@@ -26,7 +26,7 @@ While this package may work with other RPLIDAR models by changing the baud rate,
 > Note: This package is only available on packages.lgdxrobot.uk
 
 ```bash
-sudo apt install ros-lyrical-lgdx-rplidar-c1-ros2
+sudo apt install ros-lyrical-lgdx-rplidar-c1
 ```
 
 ### 1.2. Build from source

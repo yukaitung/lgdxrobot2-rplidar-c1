@@ -117,7 +117,7 @@ release:
     - job: prepare
       artifacts: true
   script:
-    - apk add glab
+    - glab auth status
   release:
     name : '$APP_VERSION'
     tag_name: '$APP_VERSION'

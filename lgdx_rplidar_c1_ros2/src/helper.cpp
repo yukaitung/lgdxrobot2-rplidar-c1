@@ -1,8 +1,8 @@
-#include "lgdx_rplidar_c1_ros2/helper.hpp"
-
 #include <format>
 #include <iostream>
 #include <numbers>
+
+#include "lgdx_rplidar_c1_ros2/helper.hpp"
 
 void Helper::PrintHex(const std::vector<uint8_t> &data)
 {

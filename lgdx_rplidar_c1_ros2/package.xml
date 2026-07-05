@@ -3,12 +3,12 @@
 <package format="3">
   <name>lgdx_rplidar_c1_ros2</name>
   <version>1.0.0</version>
-  <description>RPLIDAR C1 ROS 2 Support for LGDXRobot2</description>
+  <description>Lyrical RPLIDAR C1 ROS 2 wrapper for LGDXRobot2</description>
   <maintainer email="info@bristolgram.uk">LGDXRobot</maintainer>
   <author email="info@bristolgram.uk">LGDXRobot</author>
   <url type="website">https://lgdxrobot.uk/lgdxrobot2</url>
-  <url type="repository">https://gitlab.com/lgdxrobotics/lgdx_rplidar_c1_ros2</url>
-  <url type="bugtracker">https://gitlab.com/lgdxrobotics/lgdx_rplidar_c1_ros2/-/issues</url>
+  <url type="repository">https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1</url>
+  <url type="bugtracker">https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/issues</url>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -16,13 +16,11 @@
   <buildtool_depend>rclcpp</buildtool_depend>
   <buildtool_depend>rclcpp_components</buildtool_depend>
   <buildtool_depend>sensor_msgs</buildtool_depend>
-  <buildtool_depend>std_msgs</buildtool_depend>
 
   <exec_depend>boost</exec_depend>
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>rclcpp_components</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

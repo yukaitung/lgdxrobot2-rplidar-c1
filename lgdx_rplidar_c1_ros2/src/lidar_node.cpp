@@ -1,20 +1,25 @@
 #include <format>
 #include <numbers> 
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
 #include "lgdx_rplidar_c1_ros2/helper.hpp"
 #include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
 #include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
 #include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
+#include "lgdx_rplidar_c1_ros2/scan/express_scan.hpp"
 
-LidarNode::LidarNode() : Node("rplidar_c1_node")
+namespace LgdxRobot2 
+{
+
+LidarNode::LidarNode(const rclcpp::NodeOptions &options) : Node("rplidar_c1_node", options)
 {
   timer_ = this->create_wall_timer(std::chrono::microseconds(1), [this]() {this->Initalise();});
   health_timer_ = this->create_wall_timer(std::chrono::milliseconds(kHealthRetryWaitMs), [this]() 
   {
     health_timer_->cancel();
-    serial_port_->StartSerialThread();
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+    serial_port_->StartSerialThread();
   });
   health_timer_->cancel();
   retry_timer_ = this->create_wall_timer(std::chrono::seconds(kRetryWaitSecond), [this]() 
@@ -57,12 +62,13 @@ void LidarNode::Initalise()
   this->declare_parameter("angle_compensate", false, angle_compensate_param);
   auto scan_mode_param = rcl_interfaces::msg::ParameterDescriptor{};
   scan_mode_param.description = "Specifying scan mode of lidar.";
-  this->declare_parameter("scan_mode", "", scan_mode_param);
+  this->declare_parameter("scan_mode", "Standard", scan_mode_param);
 
   // Set parameters
   angle_compensate_ = this->get_parameter("angle_compensate").as_bool();
   frame_id_ = this->get_parameter("frame_id").as_string();
   inverted_ = this->get_parameter("inverted").as_bool();
+  scam_mode_ = this->get_parameter("scan_mode").as_string();
 
   // Publisher
   scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::QoS(rclcpp::KeepLast(10)));
@@ -70,7 +76,6 @@ void LidarNode::Initalise()
   io_context_ = std::make_shared<boost::asio::io_context>();
   serial_port_ = std::make_shared<SerialPort>(shared_from_this(), io_context_);
   config_ = std::make_unique<Config>(serial_port_);
-  scan_ = std::make_unique<Scan>(serial_port_);
 
   ConnectSerialPort();
 }
@@ -80,8 +85,8 @@ void LidarNode::ConnectSerialPort()
   try
   {
     serial_port_->Connect();
-    serial_port_->StartSerialThread();
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+    serial_port_->StartSerialThread();
   }
   catch(const SerialPortException& e)
   {
@@ -93,6 +98,7 @@ void LidarNode::ConnectSerialPort()
 
 boost::asio::awaitable<void> LidarNode::Main()
 {
+  RCLCPP_INFO(this->get_logger(), "Starting main");
   try
   {
     // Self Check
@@ -263,8 +269,13 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
     uint32_t max_distance = co_await config_->GetScanModeMaxDistance(i);
     uint8_t ans_type = co_await config_->GetScanModeAnsType(i);
     std::string name = co_await config_->GetScanModeName(i);
+    if (name[name.length() - 1] == '\0')
+    {
+      name.pop_back();
+    }
     LidarScanMode scan_mode{
       .mode = i + 1,
+      .name = name,
       .us_per_sample = us_per_sample,
       .sample_rate =  1.0f / (float)us_per_sample * 1000.0f,
       .max_distance = max_distance,
@@ -274,14 +285,32 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
   }
   for(auto [key, scan_mode] : scan_modes)
   {
-    // TODO: Change mode
-    if (scan_mode.mode == 1)
-    {
-      current_scan_mode_ = scan_mode;
-    }
     RCLCPP_INFO(this->get_logger(), "Index: %d, Scan Mode: %s, Sample Rate: %.0f kHz, Max Distance: %d m, Answer Type: 0x%x",
       scan_mode.mode, key.c_str(), scan_mode.sample_rate, scan_mode.max_distance, scan_mode.answer_type);
   }
+
+  // set scan mode if specified
+  if (scam_mode_ != "Standard")
+  {
+    if (auto search = scan_modes.find(scam_mode_); search != scan_modes.end())
+    {
+      current_scan_mode_ = search->second;
+      scan_ = std::make_unique<ExpressScan>(serial_port_, current_scan_mode_.answer_type);
+    }
+    else
+    {
+      RCLCPP_WARN(this->get_logger(), "The %s scan mode is not supported.", scam_mode_.c_str());
+      current_scan_mode_ = scan_modes["Standard"];
+      scan_ = std::make_unique<Scan>(serial_port_);
+    }
+  }
+  else
+  {
+    current_scan_mode_ = scan_modes["Standard"];
+    scan_ = std::make_unique<Scan>(serial_port_);
+  }
+  RCLCPP_INFO(this->get_logger(), "Current Scan Mode: %s", current_scan_mode_.name.c_str());
+
 
   // Get Health
   LidarHealth health = co_await config_->GetHealth();
@@ -349,3 +378,7 @@ void LidarNode::PublishScan(const std::vector<LidarScanData> &scans,
   }
   scan_pub_->publish(scan_msg);
 }
+
+}
+
+RCLCPP_COMPONENTS_REGISTER_NODE(LgdxRobot2::LidarNode)

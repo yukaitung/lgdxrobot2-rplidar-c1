@@ -9,7 +9,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    channel_type =  LaunchConfiguration('channel_type', default='serial')
     serial_port = LaunchConfiguration('serial_port', default='/dev/ttyUSB0')
     serial_baudrate = LaunchConfiguration('serial_baudrate', default='460800')
     frame_id = LaunchConfiguration('frame_id', default='laser')
@@ -24,11 +23,6 @@ def generate_launch_description():
 
 
     return LaunchDescription([
-        DeclareLaunchArgument(
-            'channel_type',
-            default_value=channel_type,
-            description='Specifying channel type of lidar'),
-
         DeclareLaunchArgument(
             'serial_port',
             default_value=serial_port,
@@ -63,7 +57,7 @@ def generate_launch_description():
             package='lgdx_rplidar_c1_ros2',
             executable='rplidar_c1_node',
             name='rplidar_c1_node',
-            parameters=[{'channel_type':channel_type,
+            parameters=[{
                          'serial_port': serial_port, 
                          'serial_baudrate': serial_baudrate, 
                          'frame_id': frame_id,

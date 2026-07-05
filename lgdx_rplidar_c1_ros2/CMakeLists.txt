@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(lgdx_rplidar_c1_ros2)
 
-set(EXECUTABLE_NAME rplidar_c1_node)
+set(EXECUTABLE_NAME rplidar_c1_component)
+set(EXPORT_EXECUTABLE_NAME export_rplidar_c1_component)
 
 set(CMAKE_CXX_STANDARD 20)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -17,18 +18,16 @@ find_package(Boost REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
 
 include_directories(include)
 
-add_executable(${EXECUTABLE_NAME} 
-  src/main.cpp
+add_library(${EXECUTABLE_NAME} 
   src/config.cpp
   src/helper.cpp
   src/lidar_node.cpp
+  src/scan/express_scan.cpp
   src/scan/scan.cpp
   src/serial_port.cpp
-
 )
 target_link_libraries(${EXECUTABLE_NAME}
   "${cpp_typesupport_target}"
@@ -38,16 +37,22 @@ target_link_libraries(${EXECUTABLE_NAME}
   rclcpp::rclcpp
   rclcpp_components::component
   sensor_msgs::sensor_msgs
-  std_msgs::std_msgs
+)
+
+rclcpp_components_register_node(${EXECUTABLE_NAME}
+  PLUGIN "LgdxRobot2::LidarNode"
+  EXECUTABLE rplidar_c1_node
+)
+ament_export_targets(${EXPORT_EXECUTABLE_NAME})
+install(TARGETS ${EXECUTABLE_NAME}
+  EXPORT ${EXPORT_EXECUTABLE_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 install(DIRECTORY launch rviz
   DESTINATION share/${PROJECT_NAME}
-)
-
-install(TARGETS
-  ${EXECUTABLE_NAME} 
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

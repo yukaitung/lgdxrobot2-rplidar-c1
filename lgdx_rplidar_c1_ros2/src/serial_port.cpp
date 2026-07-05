@@ -1,4 +1,5 @@
 #include "lgdx_rplidar_c1_ros2/serial_port.hpp"
+#include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
 
 SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio::io_context> io_context) :
   logger_(node->get_logger()),
@@ -7,11 +8,6 @@ SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio
 {
   port_name_ = node->get_parameter("serial_port").as_string();
   port_baudrate_ = node->get_parameter("serial_baudrate").as_int();
-
-  reconnect_timer_ = node->create_wall_timer(std::chrono::seconds(kWaitSecond), [this]() {this->Connect();});
-  reconnect_timer_->cancel();
-
-  Connect();
 }
 
 SerialPort::~SerialPort()
@@ -31,13 +27,16 @@ void SerialPort::Connect()
 {
   RCLCPP_INFO(logger_, "Attempting to connect to %s, baudrate: %d", port_name_.c_str(), port_baudrate_);
 
+  if (serial_.is_open())
+  {
+    serial_.close();
+  }
+
   boost::system::error_code error;
   serial_.open(port_name_, error);
   if(error) 
   {
-    RCLCPP_ERROR(logger_, "Serial connection throws an error: %s, try again in %d seconds.", error.message().c_str(), kWaitSecond);
-    reconnect_timer_->reset();
-    return;
+    throw SerialPortException(error.message());
   }
   serial_.set_option(boost::asio::serial_port_base::baud_rate(port_baudrate_));
   RCLCPP_INFO(logger_, "Connected to %s", port_name_.c_str());
@@ -62,10 +61,7 @@ boost::asio::awaitable<void> SerialPort::Write(const std::vector<uint8_t> data)
   }
   catch(const std::exception& e)
   {
-    if (rclcpp::ok())
-    {
-      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
-    }
+    throw SerialPortException(e.what());
   }
 }
 
@@ -80,10 +76,7 @@ boost::asio::awaitable<std::vector<uint8_t>> SerialPort::WriteRead(const std::ve
   }
   catch(const std::exception& e)
   {
-    if (rclcpp::ok())
-    {
-      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
-    }
+    throw SerialPortException(e.what());
   }
 }
 
@@ -97,10 +90,7 @@ boost::asio::awaitable<std::vector<uint8_t>> SerialPort::Read()
   }
   catch(const std::exception& e)
   {
-    if (rclcpp::ok())
-    {
-      RCLCPP_ERROR(logger_, "Serial write throws an error: %s", e.what());
-    }
+    throw SerialPortException(e.what());
   }
 }
 
@@ -118,16 +108,12 @@ boost::asio::awaitable<void> SerialPort::Reset()
 
 void SerialPort::StopBlk()
 {
-  if (!serial_.is_open())
-  {
-    return;
-  }
-
   std::vector<uint8_t> command = {0xA5, 0x25};
   boost::system::error_code error;
   serial_.write_some(boost::asio::buffer(command), error);
   if(error) 
   {
+    // Do not throw an exception, just print the error message
     RCLCPP_ERROR(logger_, "Serial write throws an error: %s", error.message().c_str());
   }
 }

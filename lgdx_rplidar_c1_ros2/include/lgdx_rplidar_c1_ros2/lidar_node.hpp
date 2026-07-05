@@ -13,6 +13,8 @@ class LidarNode : public rclcpp::Node
     LidarNode();
     void Initalise();
 
+    void ConnectSerialPort();
+    
     boost::asio::awaitable<void> Main();
     boost::asio::awaitable<bool> SelfCheck();
     void PublishScan(const std::vector<LidarScanData> &scans, 
@@ -23,6 +25,7 @@ class LidarNode : public rclcpp::Node
   private:
     const int kMaxHealthRetry = 3;
     const int kHealthRetryWaitMs = 500;
+    const int kRetryWaitSecond = 3;
     const float kScanMinDistance = 0.05f;
 
     int health_retry_count_ = 0;
@@ -36,6 +39,7 @@ class LidarNode : public rclcpp::Node
 
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr health_timer_;
+    rclcpp::TimerBase::SharedPtr retry_timer_;
 
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_pub_;
     

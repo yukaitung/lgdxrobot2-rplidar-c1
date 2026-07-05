@@ -3,6 +3,8 @@
 
 #include "lgdx_rplidar_c1_ros2/lidar_node.hpp"
 #include "lgdx_rplidar_c1_ros2/helper.hpp"
+#include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
+#include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
 
 LidarNode::LidarNode() : Node("rplidar_c1_node")
 {
@@ -14,13 +16,17 @@ LidarNode::LidarNode() : Node("rplidar_c1_node")
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
   });
   health_timer_->cancel();
+  retry_timer_ = this->create_wall_timer(std::chrono::seconds(kRetryWaitSecond), [this]() 
+  {
+    retry_timer_->cancel();
+    ConnectSerialPort();
+  });
+  retry_timer_->cancel();
 
   rclcpp::on_shutdown([this]()
   {
-    std::cerr << "Shutting down lgdx_rplidar_c1_ros2" << std::endl;
     if (serial_port_)
     {
-      std::cerr << "Calling serial_port_->StopBlk()" << std::endl;
       serial_port_->StopBlk();
     }
   });
@@ -65,131 +71,167 @@ void LidarNode::Initalise()
   config_ = std::make_unique<Config>(serial_port_);
   scan_ = std::make_unique<Scan>(serial_port_);
 
-  serial_port_->StartSerialThread();
-  boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+  ConnectSerialPort();
+}
+
+void LidarNode::ConnectSerialPort()
+{
+  try
+  {
+    serial_port_->Connect();
+    serial_port_->StartSerialThread();
+    boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
+  }
+  catch(const SerialPortException& e)
+  {
+    RCLCPP_ERROR(this->get_logger(), "Serial port exception, reconnecting in %d seconds: %s", kRetryWaitSecond, e.what());
+    retry_timer_->reset();
+    return;
+  }
 }
 
 boost::asio::awaitable<void> LidarNode::Main()
 {
-  // Self Check
-  bool self_check = co_await SelfCheck();
-  if (self_check == false)
+  try
   {
-    co_await serial_port_->Reset();
-    if (health_retry_count_ >= kMaxHealthRetry)
+    // Self Check
+    bool self_check = co_await SelfCheck();
+    if (self_check == false)
     {
-      RCLCPP_FATAL(this->get_logger(), "The lidar is damaged, node will be terminated.");
-      rclcpp::shutdown();
+      co_await serial_port_->Reset();
+      if (health_retry_count_ >= kMaxHealthRetry)
+      {
+        RCLCPP_FATAL(this->get_logger(), "The lidar is damaged, node will be terminated.");
+        rclcpp::shutdown();
+        co_return;
+      }
+      health_retry_count_++;
+      health_timer_->reset();
       co_return;
     }
-    health_retry_count_++;
-    health_timer_->reset();
-    co_return;
-  }
 
-  // Set calculation
-  int points_per_revolution = int(1000 * 1000 / current_scan_mode_.us_per_sample / scan_frequency_);
-  angle_compensate_multiple = points_per_revolution / 360.0 + 1;
-  if (angle_compensate_multiple < 1)
-  {
-    angle_compensate_multiple = 1.0;
-  }
-  
-  // Scan
-  co_await scan_->StartNormalScan();
-
-  std::vector<LidarScanData> scans;
-  scans.reserve(1024);
-  rclcpp::Time start_time = this->now();
-  float last_angle = -1.0f;
-  while (rclcpp::ok())
-  {
-    auto some_scans = co_await scan_->NormalScan();
-
-    // Check if new scan data is available
-    bool has_new_scan = false;
-    size_t new_scan_index = 0;
-    for (size_t i = 0; i < some_scans.size(); i++)
+    // Set calculation
+    int points_per_revolution = int(1000 * 1000 / current_scan_mode_.us_per_sample / scan_frequency_);
+    angle_compensate_multiple = points_per_revolution / 360.0 + 1;
+    if (angle_compensate_multiple < 1)
     {
-      if (some_scans[i].angle < last_angle)
-      {
-        has_new_scan = true;
-        new_scan_index = i;
-      }
-      last_angle = some_scans[i].angle;
+      angle_compensate_multiple = 1.0;
     }
+    
+    // Scan
+    co_await scan_->StartNormalScan();
 
-    // Process the scan data for one revolution
-    if (has_new_scan && scans.size() > 0)
+    std::vector<LidarScanData> scans;
+    scans.reserve(1024);
+    rclcpp::Time start_time = this->now();
+    float last_angle = -1.0f;
+    while (rclcpp::ok())
     {
-      if (new_scan_index > 0)
+      auto some_scans = co_await scan_->NormalScan();
+
+      // Check if new scan data is available
+      bool has_new_scan = false;
+      size_t new_scan_index = 0;
+      for (size_t i = 0; i < some_scans.size(); i++)
       {
-        // The frame contains the new scan data, append the data before the new scan data
-        scans.insert(scans.end(), some_scans.begin(), some_scans.begin() + new_scan_index - 1);
+        if (some_scans[i].angle < last_angle)
+        {
+          has_new_scan = true;
+          new_scan_index = i;
+        }
+        last_angle = some_scans[i].angle;
       }
 
-      rclcpp::Time end_time = this->now();
-      float scan_time = (end_time - start_time).seconds();
-      
-      if (angle_compensate_)
+      // Process the scan data for one revolution
+      if (has_new_scan && scans.size() > 0)
       {
-        const int angle_compensate_count = 360 * angle_compensate_multiple;
-        int angle_compensate_offset = 0;
-        std::vector<LidarScanData> angle_compensate_scans(angle_compensate_count, LidarScanData{});
-        for (size_t i = 0; i < scans.size(); i++)
+        if (new_scan_index > 0)
         {
-          if (scans[i].distance != 0.0f)
+          // The frame contains the new scan data, append the data before the new scan data
+          scans.insert(scans.end(), some_scans.begin(), some_scans.begin() + new_scan_index - 1);
+        }
+
+        rclcpp::Time end_time = this->now();
+        float scan_time = (end_time - start_time).seconds();
+        
+        if (angle_compensate_)
+        {
+          const int angle_compensate_count = 360 * angle_compensate_multiple;
+          int angle_compensate_offset = 0;
+          std::vector<LidarScanData> angle_compensate_scans(angle_compensate_count, LidarScanData{});
+          for (size_t i = 0; i < scans.size(); i++)
           {
-            int angle_value = int(scans[i].angle * angle_compensate_multiple);
-            if ((angle_value - angle_compensate_offset) < 0)
+            if (scans[i].distance != 0.0f)
             {
-              angle_compensate_offset = angle_value;
-            }
-            for (size_t j = 0; j < angle_compensate_multiple; j++)
-            {
-              int angle_compensate_index = angle_value - angle_compensate_offset + j;
-              if (angle_compensate_index >= angle_compensate_count)
+              int angle_value = int(scans[i].angle * angle_compensate_multiple);
+              if ((angle_value - angle_compensate_offset) < 0)
               {
-                angle_compensate_index = angle_compensate_count - 1;
+                angle_compensate_offset = angle_value;
               }
-              if (angle_compensate_index >= 0 && angle_compensate_index < angle_compensate_count) // Must > 0
+              for (size_t j = 0; j < angle_compensate_multiple; j++)
               {
-                angle_compensate_scans[angle_compensate_index] = scans[i];
+                int angle_compensate_index = angle_value - angle_compensate_offset + j;
+                if (angle_compensate_index >= angle_compensate_count)
+                {
+                  angle_compensate_index = angle_compensate_count - 1;
+                }
+                if (angle_compensate_index >= 0 && angle_compensate_index < angle_compensate_count) // Must > 0
+                {
+                  angle_compensate_scans[angle_compensate_index] = scans[i];
+                }
               }
             }
           }
+
+          float angle_max = Helper::DegToRad(360.0f);
+          float angle_min = 0.0f;
+
+          PublishScan(angle_compensate_scans, 0, angle_compensate_scans.size(), angle_max, angle_min, start_time, scan_time);
+        }
+        else
+        {
+          int start = 0, end = 0, i = 0;
+          // Find the first valid node and last valid node
+          while (scans[i++].distance == 0.0f && (long unsigned int)(i) < scans.size() - 1);
+          start = i - 1;
+          i = scans.size() - 1;
+          while (scans[i--].distance != 0.0f && i > 0);
+          end = i + 1;
+
+          float angle_max = Helper::DegToRad(scans[end].angle);
+          float angle_min = Helper::DegToRad(scans[start].angle);
+
+          PublishScan(scans, start, end - start + 1, angle_max, angle_min, start_time, scan_time);
         }
 
-        float angle_max = Helper::DegToRad(360.0f);
-        float angle_min = 0.0f;
-
-        PublishScan(angle_compensate_scans, 0, angle_compensate_scans.size(), angle_max, angle_min, start_time, scan_time);
+        scans.clear();
+        start_time = this->now();
+        scans.insert(scans.end(), some_scans.begin() + new_scan_index, some_scans.end());
       }
       else
       {
-        int start = 0, end = 0, i = 0;
-        // Find the first valid node and last valid node
-        while (scans[i++].distance == 0.0f && (long unsigned int)(i) < scans.size() - 1);
-        start = i - 1;
-        i = scans.size() - 1;
-        while (scans[i--].distance != 0.0f && i > 0);
-        end = i + 1;
-
-        float angle_max = Helper::DegToRad(scans[end].angle);
-        float angle_min = Helper::DegToRad(scans[start].angle);
-
-        PublishScan(scans, start, end - start + 1, angle_max, angle_min, start_time, scan_time);
+        // Not full revolution, append the scan data
+        scans.insert(scans.end(), some_scans.begin(), some_scans.end());
       }
-
-      scans.clear();
-      start_time = this->now();
-      scans.insert(scans.end(), some_scans.begin() + new_scan_index, some_scans.end());
     }
-    else
+  }
+  catch(const GetConfigException& e)
+  {
+    if (rclcpp::ok())
     {
-      // Not full revolution, append the scan data
-      scans.insert(scans.end(), some_scans.begin(), some_scans.end());
+      RCLCPP_ERROR(this->get_logger(), "Get config exception, reconnecting in %d seconds: %s", kRetryWaitSecond, e.what());
+      retry_timer_->reset();
     }
+    co_return;
+  }
+  catch(const SerialPortException& e)
+  {
+    if (rclcpp::ok())
+    {
+      RCLCPP_ERROR(this->get_logger(), "Serial port exception, reconnecting in %d seconds: %s", kRetryWaitSecond, e.what());
+      retry_timer_->reset();
+    }
+    co_return;
   }
 }
 

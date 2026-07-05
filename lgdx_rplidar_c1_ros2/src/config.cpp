@@ -1,7 +1,8 @@
-#include "lgdx_rplidar_c1_ros2/config.hpp"
-
 #include <bit>
 #include <cstring>
+
+#include "lgdx_rplidar_c1_ros2/config.hpp"
+#include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
 
 Config::Config(std::shared_ptr<SerialPort> serial_port) :
   serial_port_(serial_port)
@@ -23,7 +24,7 @@ boost::asio::awaitable<LidarInfo> Config::GetInfo()
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 27 && data.at(7) != 0x50)
   {
-    throw std::runtime_error("GetInfo: Unexpected data size");
+    throw GetConfigException("GetInfo: Unexpected data size");
   }
   LidarInfo info;
   std::memcpy(&info, data.data(), sizeof(LidarInfo));
@@ -36,7 +37,7 @@ boost::asio::awaitable<LidarHealth> Config::GetHealth()
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 10 && data.at(7) != 0x52)
   {
-    throw std::runtime_error("GetHealth: Unexpected data size");
+    throw GetConfigException("GetHealth: Unexpected data size");
   }
   LidarHealth health;
   std::memcpy(&health, data.data(), sizeof(LidarHealth));
@@ -51,7 +52,7 @@ boost::asio::awaitable<uint16_t> Config::GetScanModeCount()
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 13 && data.at(7) != 0x70)
   {
-    throw std::runtime_error("GetScanModeCount: Unexpected data size");
+    throw GetConfigException("GetScanModeCount: Unexpected data size");
   }
   uint16_t count = data.at(12) << 8 | data.at(11);
   co_return count;
@@ -66,7 +67,7 @@ boost::asio::awaitable<uint32_t> Config::GetScanModeUsPerSample(uint16_t index)
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 15 && data.at(7) != 0x71)
   {
-    throw std::runtime_error("GetScanModeUsPerSample: Unexpected data size");
+    throw GetConfigException("GetScanModeUsPerSample: Unexpected data size");
   }
   uint32_t us_per_sample = data.at(13) << 24 | data.at(14) << 16 | data.at(11) << 8 | data.at(12);
   co_return us_per_sample;
@@ -81,7 +82,7 @@ boost::asio::awaitable<uint32_t> Config::GetScanModeMaxDistance(uint16_t index)
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 15 && data.at(7) != 0x74)
   {
-    throw std::runtime_error("GetScanModeMaxDistance: Unexpected data size");
+    throw GetConfigException("GetScanModeMaxDistance: Unexpected data size");
   }
   uint32_t max_distance = data.at(13) << 24 | data.at(14) << 16 | data.at(11) << 8 | data.at(12);
   co_return max_distance;
@@ -96,7 +97,7 @@ boost::asio::awaitable<uint8_t> Config::GetScanModeAnsType(uint16_t index)
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 12 && data.at(7) != 0x75)
   {
-    throw std::runtime_error("GetScanModeAnsType: Unexpected data size");
+    throw GetConfigException("GetScanModeAnsType: Unexpected data size");
   }
   co_return data.at(11);
 }
@@ -109,7 +110,7 @@ boost::asio::awaitable<uint16_t> Config::GetScanModeTypical()
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 13 && data.at(7) != 0x7C)
   {
-    throw std::runtime_error("GetScanModeTypical: Unexpected data size");
+    throw GetConfigException("GetScanModeTypical: Unexpected data size");
   }
   uint16_t typical = data.at(12) << 8 | data.at(11);
   co_return typical;
@@ -124,7 +125,7 @@ boost::asio::awaitable<std::string> Config::GetScanModeName(uint16_t index)
   std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
   if (data.size() != 13 && data.at(7) != 0x7F)
   {
-    throw std::runtime_error("GetScanModeName: Unexpected data size");
+    throw GetConfigException("GetScanModeName: Unexpected data size");
   }
   std::string name;
   name.reserve(data.size() - 11);

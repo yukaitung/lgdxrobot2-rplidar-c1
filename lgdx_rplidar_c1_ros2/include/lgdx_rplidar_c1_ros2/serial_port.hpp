@@ -27,8 +27,7 @@ class SerialPort
     unsigned int kWaitSecond = 5;
 
     rclcpp::Logger logger_;
-    rclcpp::TimerBase::SharedPtr reconnect_timer_;
-
+    
     std::shared_ptr<boost::asio::io_context> io_context_;
     boost::asio::serial_port serial_;
     std::thread serial_thread_;

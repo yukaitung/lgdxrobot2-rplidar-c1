@@ -17,7 +17,7 @@ prepare:
   image: alpine:latest
   script:
     - apk add libxml2-utils
-    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdxrobot2_agent/package.xml)" >> variables.env
+    - echo "APP_VERSION=$(xmllint --xpath "//package/version/text()" lgdx_rplidar_c1_ros2/package.xml)" >> variables.env
   artifacts:
     reports:
       dotenv: variables.env

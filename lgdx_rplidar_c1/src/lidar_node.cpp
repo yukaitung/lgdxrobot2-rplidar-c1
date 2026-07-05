@@ -71,7 +71,7 @@ void LidarNode::Initalise()
   scam_mode_ = this->get_parameter("scan_mode").as_string();
 
   // Publisher
-  scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::QoS(rclcpp::KeepLast(10)));
+  scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::SensorDataQoS().reliable());
 
   io_context_ = std::make_shared<boost::asio::io_context>();
   serial_port_ = std::make_shared<SerialPort>(shared_from_this(), io_context_);

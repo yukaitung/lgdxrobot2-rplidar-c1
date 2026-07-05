@@ -108,7 +108,7 @@ upload:
 
 release:
   stage: release
-  image: gitlab/glab:latest
+  image: registry.gitlab.com/gitlab-org/cli:latest
   rules:
     - if: $CI_COMMIT_TAG
       when: never 

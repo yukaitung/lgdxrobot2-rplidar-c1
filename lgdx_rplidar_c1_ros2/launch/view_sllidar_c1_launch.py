@@ -60,16 +60,16 @@ def generate_launch_description():
             description='Specifying scan mode of lidar'),
 
         Node(
-            package='sllidar_ros2',
-            executable='sllidar_node',
-            name='sllidar_node',
+            package='lgdx_rplidar_c1_ros2',
+            executable='rplidar_c1_node',
+            name='rplidar_c1_node',
             parameters=[{'channel_type':channel_type,
                          'serial_port': serial_port, 
                          'serial_baudrate': serial_baudrate, 
                          'frame_id': frame_id,
                          'inverted': inverted, 
                          'angle_compensate': angle_compensate,
-                           'scan_mode': scan_mode
+                            'scan_mode': scan_mode
                          }],
             output='screen'),
 

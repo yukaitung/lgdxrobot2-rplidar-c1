@@ -12,7 +12,7 @@ class Scan
     Scan(std::shared_ptr<SerialPort> serial_port);
     
     boost::asio::awaitable<void> StartNormalScan();
-    boost::asio::awaitable<std::pair<bool, std::vector<LidarScanData>>> NormalScan();
+    boost::asio::awaitable<std::pair<int, std::vector<LidarScanData>>> NormalScan();
 
   private:
     const size_t kBufferSize = 1024;

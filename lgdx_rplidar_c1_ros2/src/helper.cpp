@@ -16,5 +16,5 @@ void Helper::PrintHex(const std::vector<uint8_t> &data)
 
 float Helper::DegToRad(float deg)
 {
-  return deg * (std::numbers::pi / 180.0f);
+  return deg * (std::numbers::pi_v<float> / 180.0f);
 }

@@ -93,9 +93,16 @@ boost::asio::awaitable<void> LidarNode::Main()
   rclcpp::Time start_time = this->now();
   while (rclcpp::ok())
   {
-    auto [has_new_scan, some_scans] = co_await scan_->NormalScan();
-    if (has_new_scan && scans.size() > 0)
+    auto [new_scan_index, some_scans] = co_await scan_->NormalScan();
+
+    if (new_scan_index >= 0 && scans.size() > 0)
     {
+      if (new_scan_index > 0)
+      {
+        // The frame contains the new scan data, append the data before the new scan data
+        scans.insert(scans.end(), some_scans.begin(), some_scans.begin() + new_scan_index - 1);
+      }
+
       rclcpp::Time end_time = this->now();
       float scan_time = (end_time - start_time).seconds();
       
@@ -149,8 +156,12 @@ boost::asio::awaitable<void> LidarNode::Main()
 
       scans.clear();
       start_time = this->now();
+      scans.insert(scans.end(), some_scans.begin() + new_scan_index, some_scans.end());
     }
-    scans.insert(scans.end(), some_scans.begin(), some_scans.end());
+    else
+    {
+      scans.insert(scans.end(), some_scans.begin(), some_scans.end());
+    }
   }
 }
 
@@ -231,16 +242,17 @@ void LidarNode::PublishScan(const std::vector<LidarScanData> &scans,
   bool reversed = (angle_max > angle_min);
   if (reversed)
   {
-    scan_msg.angle_min = std::numbers::pi - angle_max;
-    scan_msg.angle_max = std::numbers::pi - angle_min;
+    scan_msg.angle_min = std::numbers::pi_v<float> - angle_max;
+    scan_msg.angle_max = std::numbers::pi_v<float> - angle_min;
   }
   else
   {
-    scan_msg.angle_min = std::numbers::pi - angle_min;
-    scan_msg.angle_max = std::numbers::pi - angle_max;
+    scan_msg.angle_min = std::numbers::pi_v<float> - angle_min;
+    scan_msg.angle_max = std::numbers::pi_v<float> - angle_max;
   }
   scan_msg.angle_increment = (scan_msg.angle_max - scan_msg.angle_min) / float(valid_scans_count - 1);
   scan_msg.scan_time = scan_time;
+  scan_msg.time_increment = scan_time / float(valid_scans_count - 1);
   scan_msg.range_min = kScanMinDistance;
   scan_msg.range_max = current_scan_mode_.max_distance;
 

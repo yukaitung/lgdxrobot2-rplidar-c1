@@ -23,7 +23,6 @@ SerialPort::~SerialPort()
     serial_.cancel();
     serial_.close();
   }
-  io_context_->stop();
   if(serial_thread_.joinable())
   {
     serial_thread_.join();

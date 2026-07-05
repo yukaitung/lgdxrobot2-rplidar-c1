@@ -20,12 +20,12 @@ boost::asio::awaitable<void> Scan::StartNormalScan()
   buffer_.erase(buffer_.begin(), buffer_.begin() + kDescriptorSize);
 }
 
-boost::asio::awaitable<std::pair<bool, std::vector<LidarScanData>>> Scan::NormalScan()
+boost::asio::awaitable<std::pair<int, std::vector<LidarScanData>>> Scan::NormalScan()
 {
   auto data = co_await serial_port_->Read();
   buffer_.insert(buffer_.end(), data.begin(), data.end());
 
-  bool has_new_scan = false;
+  int new_scan_index = -1;
   std::vector<LidarScanData> scans;
   scans.reserve(40);
   while (rclcpp::ok() && buffer_.size() >= kScanDataSize)
@@ -37,13 +37,18 @@ boost::asio::awaitable<std::pair<bool, std::vector<LidarScanData>>> Scan::Normal
       .angle = Helper::DegToRad(uint16_t(scan_data[2] << 7 | scan_data[1] >> 1) / 64.0f),
       .distance = (uint16_t(scan_data[4] << 8 | scan_data[3]) / 4.0f / 1000.0f)
     };
-    if (scan.is_new_scan)
-    {
-      has_new_scan = true;
-    }
     scans.push_back(scan);
     buffer_.erase(buffer_.begin(), buffer_.begin() + kScanDataSize);
   }
 
-  co_return std::make_pair(has_new_scan, scans);
+  for (size_t i = 1; i < scans.size(); i++)
+  {
+    if (scans[i].angle < scans[i - 1].angle)
+    {
+      new_scan_index = i;
+      break;
+    }
+  }
+
+  co_return std::make_pair(new_scan_index, scans);
 }

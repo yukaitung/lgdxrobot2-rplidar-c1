@@ -116,8 +116,6 @@ release:
   needs:
     - job: prepare
       artifacts: true
-  script:
-    - glab auth status
   release:                               
     tag_name: 'v0.$CI_PIPELINE_IID'
     description: 'v0.$CI_PIPELINE_IID'

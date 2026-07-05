@@ -1,5 +1,5 @@
-#include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
-#include "lgdx_rplidar_c1_ros2/helper.hpp"
+#include "lgdx_rplidar_c1/scan/scan.hpp"
+#include "lgdx_rplidar_c1/helper.hpp"
 
 Scan::Scan(std::shared_ptr<SerialPort> serial_port) :
   serial_port_(serial_port),

@@ -17,7 +17,7 @@ def generate_launch_description():
     scan_mode = LaunchConfiguration('scan_mode', default='Standard')
 
     rviz_config_dir = os.path.join(
-            get_package_share_directory('lgdx_rplidar_c1_ros2'),
+            get_package_share_directory('lgdx_rplidar_c1'),
             'rviz',
             'sllidar_ros2.rviz')
 
@@ -54,7 +54,7 @@ def generate_launch_description():
             description='Specifying scan mode of lidar'),
 
         Node(
-            package='lgdx_rplidar_c1_ros2',
+            package='lgdx_rplidar_c1',
             executable='rplidar_c1_node',
             name='rplidar_c1_node',
             parameters=[{

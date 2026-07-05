@@ -2,4 +2,77 @@
 
 ## Overview
 
-This package is a rewrite ROS2 wrapper for RPLIDAR C1.
+![Screenshot](img.png)
+
+> [Release Strategy](https://lgdxrobot.uk/handbook/release-strategy/) - Built to Stay Current.<br /> 
+[![pipeline status](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/badges/main/pipeline.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/commits/main) 
+[![Latest Release](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/badges/release.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/releases) 
+
+
+A modern ROS 2 Lyrical (or later) wrapper for the RPLIDAR C1, specifically designed for LGDXRobot2. This package is developed from scratch using C++20 and Boost. It supports composable nodes and is able to reconnect to the RPLIDAR if the connection is lost.
+
+## Limitations
+
+While this package may work with other RPLIDAR models by changing the baud rate, there is no guarantee that it will be compatible with them. This package also does not support the following features:
+
+* Changing parameters on the fly: Parameters must be set before the node is started.
+* Reading from RPLIDAR over a network: This package is designed to work only with a serial connection.
+* DenseBoost scan mode: The RPLIDAR C1 does not support this mode out of the box. Although this package can read data from this mode, the results are not fully tested.
+
+## Installation
+
+### APT
+
+> Note: This package is only available on packages.lgdxrobot.uk
+
+```bash
+sudo apt install ros-lyrical-lgdx-rplidar-c1-ros2
+```
+
+### Build from source
+
+This package has been tested on Ubuntu 26.04, but it should work on other operating systems, as no system-specific calls are used.
+
+```bash
+mkdir -p ~/lgdx_ws/src
+cd ~/lgdx_ws/src
+git clone https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1.git
+cd ..
+
+# Install build dependencies
+rosdep update
+rosdep install --from-paths src --ignore-src -y
+
+colcon build --symlink-install
+```
+
+## Usage
+
+### Add UDEV rule
+
+```bash
+
+```
+
+### Launch
+
+```bash
+ros2 launch lgdx_rplidar_c1_ros2 rplidar_c1_launch.py
+```
+
+## Parameters
+
+| Parameter        | Type   | Description                                                       |
+| ---------------- | ------ | ----------------------------------------------------------------- |
+| serial_port      | string | Specifies the USB port connected to the LiDAR.                    |
+| serial_baudrate  | int    | Specifies the baud rate of the USB port connected to the LiDAR.   |
+| frame_id         | string | Specifies the frame_id of the LiDAR.                              |
+| inverted         | bool   | Specifies whether to invert the scan data.                        |
+| angle_compensate | bool   | Specifies whether to enable angle compensation for the scan data. |
+| scan_mode        | string | Specifies the scan mode of the LiDAR.                             |
+
+## Published Topics
+
+| Topic            | Type   | Description                                                       |
+| ---------------- | ------ | ----------------------------------------------------------------- |
+| scan             | LaserScan | Publishes the scan data of the LiDAR.

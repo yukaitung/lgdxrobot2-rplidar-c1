@@ -49,7 +49,7 @@ colcon build --symlink-install
 ### 2. Add UDEV rule
 
 ```bash
-curl -L -o rplidar.rules https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1-ros2/-/raw/main/udev/rplidar.rules
+curl -L -o rplidar.rules https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/raw/main/udev/rplidar.rules
 sudo cp rplidar.rules  /etc/udev/rules.d
 sudo service udev reload
 sudo service udev restart

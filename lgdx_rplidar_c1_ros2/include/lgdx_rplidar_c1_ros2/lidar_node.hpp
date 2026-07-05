@@ -30,7 +30,8 @@ class LidarNode : public rclcpp::Node
 
     int health_retry_count_ = 0;
     std::string frame_id_;
-    bool inverted_;
+    bool inverted_ = false;
+    std::string scam_mode_;
 
     LidarScanMode current_scan_mode_;
     float scan_frequency_ = 10.0f; // default frequent is 10 hz (by motor pwm value)

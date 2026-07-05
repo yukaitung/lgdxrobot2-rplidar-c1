@@ -6,6 +6,7 @@
 #include "lgdx_rplidar_c1_ros2/exceptions/get_config_exception.hpp"
 #include "lgdx_rplidar_c1_ros2/exceptions/serial_port_exception.hpp"
 #include "lgdx_rplidar_c1_ros2/scan/scan.hpp"
+#include "lgdx_rplidar_c1_ros2/scan/express_scan.hpp"
 
 LidarNode::LidarNode() : Node("rplidar_c1_node")
 {
@@ -57,12 +58,13 @@ void LidarNode::Initalise()
   this->declare_parameter("angle_compensate", false, angle_compensate_param);
   auto scan_mode_param = rcl_interfaces::msg::ParameterDescriptor{};
   scan_mode_param.description = "Specifying scan mode of lidar.";
-  this->declare_parameter("scan_mode", "", scan_mode_param);
+  this->declare_parameter("scan_mode", "Standard", scan_mode_param);
 
   // Set parameters
   angle_compensate_ = this->get_parameter("angle_compensate").as_bool();
   frame_id_ = this->get_parameter("frame_id").as_string();
   inverted_ = this->get_parameter("inverted").as_bool();
+  scam_mode_ = this->get_parameter("scan_mode").as_string();
 
   // Publisher
   scan_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("scan", rclcpp::QoS(rclcpp::KeepLast(10)));
@@ -274,7 +276,6 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
   }
   for(auto [key, scan_mode] : scan_modes)
   {
-    // TODO: Change mode
     if (scan_mode.mode == 1)
     {
       current_scan_mode_ = scan_mode;
@@ -282,6 +283,21 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
     RCLCPP_INFO(this->get_logger(), "Index: %d, Scan Mode: %s, Sample Rate: %.0f kHz, Max Distance: %d m, Answer Type: 0x%x",
       scan_mode.mode, key.c_str(), scan_mode.sample_rate, scan_mode.max_distance, scan_mode.answer_type);
   }
+
+  // set scan mode if specified
+  if (!scam_mode_.empty() && scam_mode_ != "Standard")
+  {
+    if (scan_modes.contains(scam_mode_))
+    {
+      current_scan_mode_ = scan_modes[scam_mode_];
+    }
+    else
+    {
+      RCLCPP_WARN(this->get_logger(), "The %s scan mode is not supported.", scam_mode_.c_str());
+    }
+  }
+  RCLCPP_INFO(this->get_logger(), "Current Scan Mode: %s", scam_mode_.c_str());
+
 
   // Get Health
   LidarHealth health = co_await config_->GetHealth();

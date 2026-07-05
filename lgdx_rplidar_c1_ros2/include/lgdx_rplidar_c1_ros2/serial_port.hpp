@@ -21,6 +21,8 @@ class SerialPort
     boost::asio::awaitable<void> Stop();
     boost::asio::awaitable<void> Reset();
 
+    void StopBlk();
+
   private:
     unsigned int kWaitSecond = 5;
 
@@ -35,8 +37,6 @@ class SerialPort
 
     std::string port_name_;
     unsigned int port_baudrate_;
-
-    void StopBlk();
 };
 
 #endif // SERIAL_PORT_HPP

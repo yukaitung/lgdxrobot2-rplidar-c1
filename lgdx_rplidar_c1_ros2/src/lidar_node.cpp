@@ -14,6 +14,16 @@ LidarNode::LidarNode() : Node("rplidar_c1_node")
     boost::asio::co_spawn(*io_context_, LidarNode::Main(), boost::asio::detached);
   });
   health_timer_->cancel();
+
+  rclcpp::on_shutdown([this]()
+  {
+    std::cerr << "Shutting down lgdx_rplidar_c1_ros2" << std::endl;
+    if (serial_port_)
+    {
+      std::cerr << "Calling serial_port_->StopBlk()" << std::endl;
+      serial_port_->StopBlk();
+    }
+  });
 }
 
 void LidarNode::Initalise()
@@ -142,8 +152,7 @@ boost::asio::awaitable<void> LidarNode::Main()
               {
                 angle_compensate_index = angle_compensate_count - 1;
               }
-              
-              if (angle_compensate_index >= 0 && size_t(angle_compensate_index) < angle_compensate_count) // Must > 0
+              if (angle_compensate_index >= 0 && angle_compensate_index < angle_compensate_count) // Must > 0
               {
                 angle_compensate_scans[angle_compensate_index] = scans[i];
               }

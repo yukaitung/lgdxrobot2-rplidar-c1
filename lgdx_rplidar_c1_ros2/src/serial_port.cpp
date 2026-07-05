@@ -16,10 +16,8 @@ SerialPort::SerialPort(rclcpp::Node::SharedPtr node, std::shared_ptr<boost::asio
 
 SerialPort::~SerialPort()
 {
-  RCLCPP_INFO(logger_, "SerialPort::~SerialPort()");
   if (serial_.is_open())
   {
-    StopBlk();
     serial_.cancel();
     serial_.close();
   }
@@ -120,13 +118,16 @@ boost::asio::awaitable<void> SerialPort::Reset()
 
 void SerialPort::StopBlk()
 {
-  std::vector<uint8_t> command = {0xA5, 0x25};
+  if (!serial_.is_open())
+  {
+    return;
+  }
 
+  std::vector<uint8_t> command = {0xA5, 0x25};
   boost::system::error_code error;
   serial_.write_some(boost::asio::buffer(command), error);
   if(error) 
   {
     RCLCPP_ERROR(logger_, "Serial write throws an error: %s", error.message().c_str());
-    return;
   }
 }

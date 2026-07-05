@@ -87,4 +87,16 @@ sudo service udev restart
 
 | Topic            | Type   | Description                                                       |
 | ---------------- | ------ | ----------------------------------------------------------------- |
-| scan             | LaserScan | Publishes the scan data of the LiDAR.
+| scan             | LaserScan | Publishes the scan data of the LiDAR.|
+
+## Design
+
+This package relies on Boost.Asio for serial communication. It utilises C++20 coroutines, so there is no blocking when reading from the RPLIDAR. The node consists of the following classes:
+
+* **LidarNode**: The main node class that cooperates with all other classes to initialise the RPLIDAR and read and publish scan data.
+* **SerialPort**: A class that handles serial port communication.
+* **Config**: A class that handles retrieving the configuration from the RPLIDAR.
+* **Scan** (*Strategy class*): A class that starts and reads scan data from the RPLIDAR.
+* **ExpressScan** (*Strategy class*): A class that starts and reads express scan data from the RPLIDAR. (Not fully tested.)
+
+Using the Strategy classes, the scanning behaviour can be changed by switching the scan mode.

@@ -18,12 +18,14 @@ class ExpressScan : public ScanBase
   private:
     const size_t kBufferSize = 1024;
     const size_t kDescriptorSize = 7;
-    const size_t kScanDataSize = 5;
+    const size_t kScanDataSize = 84;
     
     uint8_t mode_ = 0;
 
     std::shared_ptr<SerialPort> serial_port_;
     boost::circular_buffer<uint8_t> buffer_;
+
+    float AngleDiff(float this_angle, float next_angle);
 };
 
 #endif // EXPRESS_SCAN_HPP

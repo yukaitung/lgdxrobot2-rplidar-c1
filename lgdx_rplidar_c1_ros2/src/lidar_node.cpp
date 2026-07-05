@@ -72,7 +72,6 @@ void LidarNode::Initalise()
   io_context_ = std::make_shared<boost::asio::io_context>();
   serial_port_ = std::make_shared<SerialPort>(shared_from_this(), io_context_);
   config_ = std::make_unique<Config>(serial_port_);
-  scan_ = std::make_unique<Scan>(serial_port_);
 
   ConnectSerialPort();
 }
@@ -152,6 +151,12 @@ boost::asio::awaitable<void> LidarNode::Main()
         {
           // The frame contains the new scan data, append the data before the new scan data
           scans.insert(scans.end(), some_scans.begin(), some_scans.begin() + new_scan_index - 1);
+        }
+
+        RCLCPP_INFO(this->get_logger(), "scans.size(): %ld", scans.size());
+        for (size_t i = 0; i < scans.size(); i++)
+        {
+          RCLCPP_INFO(this->get_logger(), "%ld, %f, %f", i, scans[i].angle, scans[i].distance);
         }
 
         rclcpp::Time end_time = this->now();
@@ -265,8 +270,13 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
     uint32_t max_distance = co_await config_->GetScanModeMaxDistance(i);
     uint8_t ans_type = co_await config_->GetScanModeAnsType(i);
     std::string name = co_await config_->GetScanModeName(i);
+    if (name[name.length() - 1] == '\0')
+    {
+      name.pop_back();
+    }
     LidarScanMode scan_mode{
       .mode = i + 1,
+      .name = name,
       .us_per_sample = us_per_sample,
       .sample_rate =  1.0f / (float)us_per_sample * 1000.0f,
       .max_distance = max_distance,
@@ -276,27 +286,31 @@ boost::asio::awaitable<bool> LidarNode::SelfCheck()
   }
   for(auto [key, scan_mode] : scan_modes)
   {
-    if (scan_mode.mode == 1)
-    {
-      current_scan_mode_ = scan_mode;
-    }
     RCLCPP_INFO(this->get_logger(), "Index: %d, Scan Mode: %s, Sample Rate: %.0f kHz, Max Distance: %d m, Answer Type: 0x%x",
       scan_mode.mode, key.c_str(), scan_mode.sample_rate, scan_mode.max_distance, scan_mode.answer_type);
   }
 
   // set scan mode if specified
-  if (!scam_mode_.empty() && scam_mode_ != "Standard")
+  if (scam_mode_ != "Standard")
   {
-    if (scan_modes.contains(scam_mode_))
+    if (auto search = scan_modes.find(scam_mode_); search != scan_modes.end())
     {
-      current_scan_mode_ = scan_modes[scam_mode_];
+      current_scan_mode_ = search->second;
+      scan_ = std::make_unique<ExpressScan>(serial_port_, current_scan_mode_.answer_type);
     }
     else
     {
       RCLCPP_WARN(this->get_logger(), "The %s scan mode is not supported.", scam_mode_.c_str());
+      current_scan_mode_ = scan_modes["Standard"];
+      scan_ = std::make_unique<Scan>(serial_port_);
     }
   }
-  RCLCPP_INFO(this->get_logger(), "Current Scan Mode: %s", scam_mode_.c_str());
+  else
+  {
+    current_scan_mode_ = scan_modes["Standard"];
+    scan_ = std::make_unique<Scan>(serial_port_);
+  }
+  RCLCPP_INFO(this->get_logger(), "Current Scan Mode: %s", current_scan_mode_.name.c_str());
 
 
   // Get Health

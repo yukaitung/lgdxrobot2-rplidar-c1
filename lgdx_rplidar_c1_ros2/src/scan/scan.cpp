@@ -11,7 +11,7 @@ boost::asio::awaitable<void> Scan::Start()
   // Send the command
   std::vector<uint8_t> command = {0xA5, 0x20};
   co_await serial_port_->Write(command);
-
+  
   while (rclcpp::ok() && buffer_.size() < kDescriptorSize)
   {
     auto data = co_await serial_port_->Read();

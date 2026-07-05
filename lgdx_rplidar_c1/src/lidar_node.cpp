@@ -135,6 +135,11 @@ boost::asio::awaitable<void> LidarNode::Main()
     while (rclcpp::ok())
     {
       auto some_scans = co_await scan_->GetData();
+      if (!rclcpp::ok())
+      {
+        // Prevent publishing when shutdown
+        co_return;
+      }
 
       // Check if new scan data is available
       bool has_new_scan = false;
@@ -335,6 +340,12 @@ void LidarNode::PublishScan(const std::vector<LidarScanData> &scans,
   const float angle_max, const float angle_min,
   const rclcpp::Time &start_time, const float scan_time)
 {
+  if (!rclcpp::ok())
+  {
+    // Prevent publishing when shutdown
+    return;
+  }
+
   sensor_msgs::msg::LaserScan scan_msg;
   scan_msg.header.stamp = start_time;
   scan_msg.header.frame_id = frame_id_;

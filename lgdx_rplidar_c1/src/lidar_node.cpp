@@ -46,22 +46,22 @@ void LidarNode::Initalise()
 
   // Declare parameters
   auto serial_port_param = rcl_interfaces::msg::ParameterDescriptor{};
-  serial_port_param.description = "Specifying usb port to connected lidar.";
+  serial_port_param.description = "RPLIDAR serial port name.";
   this->declare_parameter("serial_port", "/dev/ttyUSB0", serial_port_param);
   auto serial_baudrate_param = rcl_interfaces::msg::ParameterDescriptor{};
-  serial_baudrate_param.description = "Specifying usb port baudrate to connected lidar.";
+  serial_baudrate_param.description = "RPLIDAR serial port baud rate.";
   this->declare_parameter("serial_baudrate", 460800, serial_baudrate_param);
   auto frame_id_param = rcl_interfaces::msg::ParameterDescriptor{};
-  frame_id_param.description = "Specifying frame id of lidar.";
+  frame_id_param.description = "Custom frame ID for the scan data.";
   this->declare_parameter("frame_id", "laser_frame", frame_id_param);
   auto inverted_param = rcl_interfaces::msg::ParameterDescriptor{};
-  inverted_param.description = "Specifying whether or not to invert scan data.";
+  inverted_param.description = "Whether to invert the scan data.";
   this->declare_parameter("inverted", false, inverted_param);
   auto angle_compensate_param = rcl_interfaces::msg::ParameterDescriptor{};
-  angle_compensate_param.description = "Specifying whether or not to enable angle_compensate of scan data.";
+  angle_compensate_param.description = "Publish scan data with a consistent number of points. Disable this option to publish the variable-sized data received directly from the RPLIDAR.";
   this->declare_parameter("angle_compensate", false, angle_compensate_param);
   auto scan_mode_param = rcl_interfaces::msg::ParameterDescriptor{};
-  scan_mode_param.description = "Specifying scan mode of lidar.";
+  scan_mode_param.description = "RPLIDAR scan mode.";
   this->declare_parameter("scan_mode", "Standard", scan_mode_param);
 
   // Set parameters

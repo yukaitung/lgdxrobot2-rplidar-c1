@@ -6,30 +6,30 @@ from launch_ros.actions import Node
 import os
 
 launch_args = [
-  DeclareLaunchArgument(
+DeclareLaunchArgument(
     'serial_port',
     default_value='/dev/ttyUSB0',
-    description='Specifying usb port to connected lidar'),
-  DeclareLaunchArgument(
+    description='RPLIDAR serial port name.'),
+DeclareLaunchArgument(
     'serial_baudrate',
     default_value='460800',
-    description='Specifying usb port baudrate to connected lidar'),
-  DeclareLaunchArgument(
+    description='RPLIDAR serial port baud rate.'),
+DeclareLaunchArgument(
     'frame_id',
     default_value='laser',
-    description='Specifying frame_id of lidar'),
-  DeclareLaunchArgument(
+    description='Custom frame ID for the scan data.'),
+DeclareLaunchArgument(
     'inverted',
     default_value='false',
-    description='Specifying whether or not to invert scan data'),
-  DeclareLaunchArgument(
+    description='Whether to invert the scan data.'),
+DeclareLaunchArgument(
     'angle_compensate',
     default_value='True',
-    description='Specifying whether or not to enable angle_compensate of scan data'),
-  DeclareLaunchArgument(
+    description='Publish scan data with a consistent number of points. Disable this option to publish the variable-sized data received directly from the RPLIDAR.'),
+DeclareLaunchArgument(
     'scan_mode',
     default_value='Standard',
-    description='Specifying scan mode of lidar'),
+    description='RPLIDAR scan mode.'),
 ]
 
 def launch_setup(context):

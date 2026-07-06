@@ -100,3 +100,8 @@ This package relies on Boost.Asio for serial communication. It utilises C++20 co
 * **ExpressScan** (*Strategy class*): A class that starts and reads express scan data from the RPLIDAR. (Not fully tested.)
 
 Using the Strategy classes, the scanning behaviour can be changed by switching the scan mode.
+
+## Link
+
+* [GitLab](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1)
+* [GitHub](https://github.com/yukaitung/lgdxrobot2-rplidar-c1)

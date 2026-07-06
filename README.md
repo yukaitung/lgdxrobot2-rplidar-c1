@@ -59,7 +59,7 @@ sudo service udev restart
 
 ```bash
 . install/setup.bash
-ros2 launch lgdx_rplidar_c1 view_sllidar_c1_launch.py
+ros2 launch lgdx_rplidar_c1 rplidar_c1_launch.py
 ```
 
 ### Delete UDEV rule (Optional)
@@ -101,7 +101,7 @@ This package relies on Boost.Asio for serial communication. It utilises C++20 co
 
 Using the Strategy classes, the scanning behaviour can be changed by switching the scan mode.
 
-## Link
+## Links
 
 * [GitLab](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1)
 * [GitHub](https://github.com/yukaitung/lgdxrobot2-rplidar-c1)

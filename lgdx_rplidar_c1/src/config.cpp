@@ -21,7 +21,7 @@ uint8_t Config::GetCheckSum(const std::vector<uint8_t> &data)
 boost::asio::awaitable<LidarInfo> Config::GetInfo()
 {
   std::vector<uint8_t> command = {0xA5, 0x50};
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 27 && data.at(7) != 0x50)
   {
     throw GetConfigException("GetInfo: Unexpected data size");
@@ -34,7 +34,7 @@ boost::asio::awaitable<LidarInfo> Config::GetInfo()
 boost::asio::awaitable<LidarHealth> Config::GetHealth()
 {
   std::vector<uint8_t> command = {0xA5, 0x52};
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 10 && data.at(7) != 0x52)
   {
     throw GetConfigException("GetHealth: Unexpected data size");
@@ -49,7 +49,7 @@ boost::asio::awaitable<uint16_t> Config::GetScanModeCount()
 {
   std::vector<uint8_t> command = {0xA5, 0x84, 0x04, 0x70, 0x00, 0x00, 0x00};
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 13 && data.at(7) != 0x70)
   {
     throw GetConfigException("GetScanModeCount: Unexpected data size");
@@ -64,7 +64,7 @@ boost::asio::awaitable<uint32_t> Config::GetScanModeUsPerSample(uint16_t index)
   command[7] = index & 0xFF;
   command[8] = index >> 8;
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 15 && data.at(7) != 0x71)
   {
     throw GetConfigException("GetScanModeUsPerSample: Unexpected data size");
@@ -79,7 +79,7 @@ boost::asio::awaitable<uint32_t> Config::GetScanModeMaxDistance(uint16_t index)
   command[7] = index & 0xFF;
   command[8] = index >> 8;
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 15 && data.at(7) != 0x74)
   {
     throw GetConfigException("GetScanModeMaxDistance: Unexpected data size");
@@ -94,7 +94,7 @@ boost::asio::awaitable<uint8_t> Config::GetScanModeAnsType(uint16_t index)
   command[7] = index & 0xFF;
   command[8] = index >> 8;
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 12 && data.at(7) != 0x75)
   {
     throw GetConfigException("GetScanModeAnsType: Unexpected data size");
@@ -107,7 +107,7 @@ boost::asio::awaitable<uint16_t> Config::GetScanModeTypical()
   // Return from 1 not 0x81
   std::vector<uint8_t> command = {0xA5, 0x84, 0x04, 0x7C, 0x00, 0x00, 0x00};
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 13 && data.at(7) != 0x7C)
   {
     throw GetConfigException("GetScanModeTypical: Unexpected data size");
@@ -122,7 +122,7 @@ boost::asio::awaitable<std::string> Config::GetScanModeName(uint16_t index)
   command[7] = index & 0xFF;
   command[8] = index >> 8;
   command.push_back(GetCheckSum(command));
-  std::vector<uint8_t> data = co_await serial_port_->WriteRead(command);
+  std::vector<uint8_t> data = co_await serial_port_->WriteRead(std::move(command));
   if (data.size() != 13 && data.at(7) != 0x7F)
   {
     throw GetConfigException("GetScanModeName: Unexpected data size");

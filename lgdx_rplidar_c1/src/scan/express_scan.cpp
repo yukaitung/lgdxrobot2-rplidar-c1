@@ -12,7 +12,7 @@ boost::asio::awaitable<void> ExpressScan::Start()
   // Send the command
   std::vector<uint8_t> command = {0xA5, 0x82, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x22};
   command[3] = mode_;
-  co_await serial_port_->Write(command);
+  co_await serial_port_->Write(std::move(command));
 
   while (rclcpp::ok() && buffer_.size() < kDescriptorSize)
   {

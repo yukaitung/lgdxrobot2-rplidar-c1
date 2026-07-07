@@ -29,6 +29,15 @@ While this package may work with other RPLIDAR models by changing the baud rate,
 sudo apt install ros-lyrical-lgdx-rplidar-c1
 ```
 
+To add the repository to your system, run the following commands. It supports both AMD64 and ARM64 architectures.
+
+```bash
+curl -L -s -o /tmp/lgdxrobot-apt-source.deb https://packages.lgdxrobot.uk/lgdxrobot-apt-source.deb
+sudo dpkg -i /tmp/lgdxrobot-apt-source.deb
+sudo apt update
+rm -f /tmp/lgdxrobot-apt-source.deb
+```
+
 ### 1.2. Build from source
 
 This package has been tested on Ubuntu 26.04, but it should work on other operating systems, as no system-specific calls are used.
@@ -50,7 +59,7 @@ colcon build --symlink-install
 
 ```bash
 curl -L -o rplidar.rules https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/raw/main/udev/rplidar.rules
-sudo cp rplidar.rules  /etc/udev/rules.d
+sudo cp rplidar.rules /etc/udev/rules.d
 sudo service udev reload
 sudo service udev restart
 ```
@@ -59,7 +68,7 @@ sudo service udev restart
 
 ```bash
 . install/setup.bash
-ros2 launch lgdx_rplidar_c1 view_sllidar_c1_launch.py
+ros2 launch lgdx_rplidar_c1 rplidar_c1_launch.py
 ```
 
 ### Delete UDEV rule (Optional)
@@ -76,18 +85,18 @@ sudo service udev restart
 
 | Parameter        | Type   | Description                                                       |
 | ---------------- | ------ | ----------------------------------------------------------------- |
-| serial_port      | string | Specifies the USB port connected to the LiDAR.                    |
-| serial_baudrate  | int    | Specifies the baud rate of the USB port connected to the LiDAR.   |
-| frame_id         | string | Specifies the frame_id of the LiDAR.                              |
-| inverted         | bool   | Specifies whether to invert the scan data.                        |
-| angle_compensate | bool   | Specifies whether to enable angle compensation for the scan data. |
-| scan_mode        | string | Specifies the scan mode of the LiDAR.                             |
+| serial_port      | string | RPLIDAR serial port name. |
+| serial_baudrate  | int    | RPLIDAR serial port baud rate. |
+| frame_id         | string | Custom frame ID for the scan data. |
+| inverted         | bool   | Whether to invert the scan data. |
+| angle_compensate | bool   | Publish scan data with a consistent number of points. Disable this option to publish the variable-sized data received directly from the RPLIDAR. |
+| scan_mode        | string | RPLIDAR scan mode. |
 
 ## Published Topics
 
 | Topic            | Type   | Description                                                       |
 | ---------------- | ------ | ----------------------------------------------------------------- |
-| scan             | LaserScan | Publishes the scan data of the LiDAR.|
+| scan             | LaserScan | Scan data of the RPLIDAR. |
 
 ## Design
 
@@ -101,7 +110,7 @@ This package relies on Boost.Asio for serial communication. It utilises C++20 co
 
 Using the Strategy classes, the scanning behaviour can be changed by switching the scan mode.
 
-## Link
+## Links
 
 * [GitLab](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1)
 * [GitHub](https://github.com/yukaitung/lgdxrobot2-rplidar-c1)

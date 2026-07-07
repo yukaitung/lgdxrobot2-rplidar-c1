@@ -21,7 +21,7 @@ find_package(sensor_msgs REQUIRED)
 
 include_directories(include)
 
-add_library(${EXECUTABLE_NAME} 
+add_library(${EXECUTABLE_NAME} SHARED
   src/config.cpp
   src/helper.cpp
   src/lidar_node.cpp

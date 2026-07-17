@@ -94,7 +94,6 @@ merge:
            --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
            "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/branches?branch=${BRANCH_NAME}&ref=${DISTRO}"
         STATUS=$(curl --request POST \
-           --silent --show-error --output /dev/null --fail \
            --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
            --form "branch=${BRANCH_NAME}" \
            --silent --output /dev/null --write-out "%{http_code}" \

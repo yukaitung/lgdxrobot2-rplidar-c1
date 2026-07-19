@@ -75,10 +75,11 @@ merge:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  
   before_script:
     - apk add python3
+    - apk add py3-pip
     - apk add curl
   script:
     - curl -L -s -o merge.py https://gitlab.com/lgdxrobotics/release-strategy-helpers/-/raw/main/merge.py?ref_type=heads
-    - pip3 install requests
+    - pip install requests
     - python merge.py
 
 #

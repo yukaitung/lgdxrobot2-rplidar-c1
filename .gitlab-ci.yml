@@ -78,7 +78,7 @@ merge:
     - apk add py3-pip
     - apk add curl
   script:
-    - curl -L -s -o merge.py https://gitlab.com/lgdxrobotics/release-strategy-helpers/-/raw/main/merge.py?ref_type=heads
+    - curl -L -s -o merge.py https://gitlab.com/lgdxrobotics/release-strategy-helpers/-/raw/main/merge.py
     - pip install requests --break-system-packages
     - python merge.py
 

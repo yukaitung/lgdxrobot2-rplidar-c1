@@ -116,3 +116,5 @@ Using the Strategy classes, the scanning behaviour can be changed by switching t
 * [GitHub](https://github.com/yukaitung/lgdxrobot2-rplidar-c1)
 
 test
+
+fdgfdgfd

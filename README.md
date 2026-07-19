@@ -8,7 +8,6 @@
 [![pipeline status](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/badges/main/pipeline.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/commits/main) 
 [![Latest Release](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/badges/release.svg)](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1/-/releases) 
 
-
 A modern ROS 2 Lyrical (or later) wrapper for the RPLIDAR C1, specifically designed for [LGDXRobot2](https://lgdxrobot.uk/lgdxrobot2/). This package is developed from scratch using C++20 and Boost. It supports composable nodes and is able to reconnect to the RPLIDAR if the connection is lost.
 
 ## Limitations
@@ -114,9 +113,3 @@ Using the Strategy classes, the scanning behaviour can be changed by switching t
 
 * [GitLab](https://gitlab.com/lgdxrobotics/lgdxrobot2-rplidar-c1)
 * [GitHub](https://github.com/yukaitung/lgdxrobot2-rplidar-c1)
-
-test
-
-fdgfdgfd
-
-hgfhfghfg
